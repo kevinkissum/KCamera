@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--Index of camera modes. -->
+    <integer name="camera_mode_photo">0</integer>
+    <integer name="camera_mode_video">1</integer>
+    <integer name="camera_mode_refocus">2</integer>
+    <integer name="camera_mode_photosphere">3</integer>
+    <integer name="camera_mode_panorama">4</integer>
+    <integer name="camera_mode_gcam">5</integer>
+    <integer name="camera_mode_capture_intent">6</integer>
+
+
+
+</resources>
