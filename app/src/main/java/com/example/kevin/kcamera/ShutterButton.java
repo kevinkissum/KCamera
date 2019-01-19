@@ -16,7 +16,7 @@ import java.util.List;
  * pressed state changes.
  */
 public class ShutterButton extends ImageView {
-    private static final Log.Tag TAG = new Log.Tag("ShutterButton");
+    private static final String TAG = "ShutterButton";
     public static final float ALPHA_WHEN_ENABLED = 1f;
     public static final float ALPHA_WHEN_DISABLED = 0.2f;
     private boolean mTouchEnabled = true;

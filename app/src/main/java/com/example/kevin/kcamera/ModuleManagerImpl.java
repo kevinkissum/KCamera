@@ -78,6 +78,7 @@ class ModuleManagerImpl implements ModuleManager {
         if (agent == null) {
             return mRegisteredModuleAgents.get(mDefaultModuleId);
         }
+        return agent;
     }
 
     @Override
@@ -92,8 +93,8 @@ class ModuleManagerImpl implements ModuleManager {
             quickSwitchTo = videoModuleId;
         } else if (moduleId == videoModuleId) {
             // Quick switch from video to last used camera (i.e. simple camera or hdr+)
-            quickSwitchTo = settingsManager.getInteger(
-                    SettingsManager.SCOPE_GLOBAL, Keys.KEY_CAMERA_MODULE_LAST_USED);
+//            quickSwitchTo = settingsManager.getInteger(
+//                    SettingsManager.SCOPE_GLOBAL, Keys.KEY_CAMERA_MODULE_LAST_USED);
         }
 
         if (mRegisteredModuleAgents.get(quickSwitchTo) != null) {

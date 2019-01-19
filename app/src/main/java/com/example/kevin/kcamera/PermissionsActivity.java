@@ -56,7 +56,7 @@ class PermissionsActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.permissions);
-        mSettingsManager = CameraServicesImpl.instance().getSettingsManager();
+//        mSettingsManager = CameraServicesImpl.instance().getSettingsManager();
 
         // Filter for screen off so that we can finish permissions activity
         // when screen is off.
@@ -199,10 +199,10 @@ class PermissionsActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.v(TAG, "onPermissionsResult counts: " + permissions.length + ":" + grantResults.length);
-        mSettingsManager.set(
-                SettingsManager.SCOPE_GLOBAL,
-                Keys.KEY_HAS_SEEN_PERMISSIONS_DIALOGS,
-                true);
+//        mSettingsManager.set(
+//                SettingsManager.SCOPE_GLOBAL,
+//                Keys.KEY_HAS_SEEN_PERMISSIONS_DIALOGS,
+//                true);
 
         if (mShouldRequestCameraPermission) {
             if (grantResults.length > 0 && grantResults[mIndexPermissionRequestCamera] ==

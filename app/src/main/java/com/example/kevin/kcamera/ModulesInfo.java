@@ -17,7 +17,7 @@ public class ModulesInfo {
         Resources res = context.getResources();
         int photoModuleId = context.getResources().getInteger(R.integer.camera_mode_photo);
         registerPhotoModule(moduleManager, photoModuleId, SettingsScopeNamespaces.PHOTO,
-                config.isUsingCaptureModule());
+                /*config.isUsingCaptureModule()*/false);
         moduleManager.setDefaultModuleIndex(photoModuleId);
 //        registerVideoModule(moduleManager, res.getInteger(R.integer.camera_mode_video),
 //                SettingsScopeNamespaces.VIDEO);
