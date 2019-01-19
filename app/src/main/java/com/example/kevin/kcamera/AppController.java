@@ -310,7 +310,7 @@ public interface AppController {
     /**
      * Returns the {@link com.android.camera.app.CameraProvider}.
      */
-//    public CameraProvider getCameraProvider();
+    public CameraProvider getCameraProvider();
 
     /**
      * Returns the new camera API manager.
@@ -334,7 +334,7 @@ public interface AppController {
     /**
      * Returns the {@link SettingsManager}.
      */
-//    public SettingsManager getSettingsManager();
+    public SettingsManager getSettingsManager();
 
     /**
      * Returns the {@link com.android.camera.settings.ResolutionSetting}.
@@ -346,7 +346,7 @@ public interface AppController {
     /**
      * @return Common services and functionality to be shared.
      */
-//    public CameraServices getServices();
+    public CameraServices getServices();
 
     /**
      * @return The error handler to invoke for errors.

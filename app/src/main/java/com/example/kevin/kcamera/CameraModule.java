@@ -1,4 +1,5 @@
 package com.example.kevin.kcamera;
 
-class CameraModule {
+public abstract class CameraModule implements ModuleController {
+
 }
