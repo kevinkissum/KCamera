@@ -13,33 +13,20 @@ import android.util.Log;
  * Created by kevin on 2019/1/15.
  */
 
-public class CameraController implements /*CameraAgent.CameraOpenCallback,*/ CameraProvider {
+public class CameraController implements /*CameraAgent.CameraOpenCallback,*/ CameraProvider , CameraDevice.StateCallback {
 
     public static final String TAG = "CameraController";
     private final Context mContext;
     private final Handler mCallbackHandler;
-    private int mRequestingCameraId;
+    private int mRequestingCameraId = -1;
+    private CameraDevice.StateCallback mStateCallback;
+    private CameraDevice mCameraProxy;
+    private static final int EMPTY_REQUEST = -1;
 
-    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
-
-        @Override
-        public void onOpened(@NonNull CameraDevice cameraDevice) {
-            // This method is called when the camera is opened.  We start camera preview here.
-        }
-
-        @Override
-        public void onDisconnected(@NonNull CameraDevice cameraDevice) {
-        }
-
-        @Override
-        public void onError(@NonNull CameraDevice cameraDevice, int error) {
-        }
-
-    };
-
-    public CameraController(Context context, Handler handler) {
+    public CameraController(Context context, CameraDevice.StateCallback cb, Handler handler) {
         mContext = context;
         mCallbackHandler = handler;
+        mStateCallback = cb;
     }
 
     @Override
@@ -99,7 +86,7 @@ public class CameraController implements /*CameraAgent.CameraOpenCallback,*/ Cam
         Log.v(TAG, "checkAndOpenCamera");
         try {
 //            CameraUtil.throwIfCameraDisabled();
-            cameraManager.openCamera(cameraId, cb, handler);
+            cameraManager.openCamera(cameraId, this, handler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
 //            handler.post(new Runnable() {
@@ -111,6 +98,11 @@ public class CameraController implements /*CameraAgent.CameraOpenCallback,*/ Cam
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
         }
+    }
+
+
+    public void closeCamera(boolean b) {
+
     }
 
     @Override
@@ -156,5 +148,34 @@ public class CameraController implements /*CameraAgent.CameraOpenCallback,*/ Cam
     @Override
     public boolean isBackFacingCamera(int id) {
         return false;
+    }
+
+    @Override
+    public void onOpened(@NonNull CameraDevice camera) {
+        Log.v(TAG, "onCameraOpened");
+//        if (mRequestingCameraId != camera.getCameraId()) {
+//            return;
+//        }
+        mCameraProxy = camera;
+        mRequestingCameraId = EMPTY_REQUEST;
+        if (mStateCallback != null) {
+            mStateCallback.onOpened(camera);
+        }
+    }
+
+    @Override
+    public void onDisconnected(@NonNull CameraDevice camera) {
+        Log.v(TAG, "onDisconnected");
+        if (mStateCallback != null) {
+            mStateCallback.onDisconnected(camera);
+        }
+    }
+
+    @Override
+    public void onError(@NonNull CameraDevice camera, int i) {
+        Log.v(TAG, "onError");
+        if (mStateCallback != null) {
+            mStateCallback.onError(camera, i);
+        }
     }
 }

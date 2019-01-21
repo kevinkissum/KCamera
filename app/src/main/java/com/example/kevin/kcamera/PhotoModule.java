@@ -2,7 +2,9 @@ package com.example.kevin.kcamera;
 
 import android.app.Fragment;
 import android.content.ContentResolver;
+import android.hardware.camera2.CameraDevice;
 import android.os.SystemClock;
+import android.telecom.VideoProfile;
 import android.util.Log;
 import android.view.View;
 
@@ -14,6 +16,7 @@ class PhotoModule extends CameraModule implements ModuleController {
     private AppController mAppController;
     private ContentResolver mContentResolver;
     private int mCameraId;
+    private CameraDevice mCameraDevice;
 
     public PhotoModule(AppController app) {
     }
@@ -204,6 +207,55 @@ class PhotoModule extends CameraModule implements ModuleController {
     @Override
     public boolean onBackPressed() {
         return false;
+    }
+
+    @Override
+    public void onCameraAvailable(CameraDevice cameraProxy) {
+        Log.i(TAG, "onCameraAvailable");
+        if (mPaused) {
+            return;
+        }
+        mCameraDevice = cameraProxy;
+
+        initializeCapabilities();
+        // mCameraCapabilities is guaranteed to initialized at this point.
+        mAppController.getCameraAppUI().showAccessibilityZoomUI(
+                mCameraCapabilities.getMaxZoomRatio());
+
+
+        // Reset zoom value index.
+        mZoomValue = 1.0f;
+        if (mFocusManager == null) {
+            initializeFocusManager();
+        }
+        mFocusManager.updateCapabilities(mCameraCapabilities);
+
+        // Do camera parameter dependent initialization.
+        mCameraSettings = mCameraDevice.getSettings();
+        // Set a default flash mode and focus mode
+        if (mCameraSettings.getCurrentFlashMode() == null) {
+            mCameraSettings.setFlashMode(VideoProfile.CameraCapabilities.FlashMode.NO_FLASH);
+        }
+        if (mCameraSettings.getCurrentFocusMode() == null) {
+            mCameraSettings.setFocusMode(VideoProfile.CameraCapabilities.FocusMode.AUTO);
+        }
+
+        setCameraParameters(UPDATE_PARAM_ALL);
+        // Set a listener which updates camera parameters based
+        // on changed settings.
+        SettingsManager settingsManager = mActivity.getSettingsManager();
+        settingsManager.addListener(this);
+        mCameraPreviewParamsReady = true;
+
+        startPreview();
+
+        onCameraOpened();
+
+        mHardwareSpec = new HardwareSpecImpl(getCameraProvider(), mCameraCapabilities,
+                mAppController.getCameraFeatureConfig(), isCameraFrontFacing());
+
+        ButtonManager buttonManager = mActivity.getButtonManager();
+        buttonManager.enableCameraButton();
     }
 
     @Override

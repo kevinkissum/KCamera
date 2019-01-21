@@ -1,5 +1,7 @@
 package com.example.kevin.kcamera;
 
+import android.hardware.camera2.CameraDevice;
+
 /**
  * The controller at app level.
  */
@@ -73,7 +75,7 @@ public interface ModuleController extends ShutterButton.OnShutterButtonListener 
      *
      * @param cameraProxy The camera device proxy.
      */
-//    public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy);
+    public void onCameraAvailable(/*CameraAgent.CameraProxy cameraProxy*/CameraDevice cameraDevice);
 
     /**
      * Called by the app on startup or module switches, this allows the module

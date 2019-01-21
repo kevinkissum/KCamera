@@ -17,6 +17,9 @@ class SettingsManager {
     public static final String MODULE_SCOPE_PREFIX = "_preferences_module_";
     public static final String CAMERA_SCOPE_PREFIX = "_preferences_camera_";
 
+    private final DefaultsStore mDefaultsStore = new DefaultsStore();
+
+
     public SettingsManager(Context context) {
         mLock = new Object();
         mContext = context;
@@ -24,7 +27,7 @@ class SettingsManager {
 
         mDefaultPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
     }
-//
+
 //    /**
 //     * Retrieve a setting's value as an Integer, manually specifying
 //     * a default value.
@@ -36,16 +39,26 @@ class SettingsManager {
 //            return convertToInt(value);
 //        }
 //    }
-//
-//    /**
-//     * Retrieve a setting's value as an Integer, converting the default value
-//     * stored in the DefaultsStore.
-//     */
-//    public int getInteger(String scope, String key) {
-//        synchronized (mLock) {
-//            return getInteger(scope, key, getIntegerDefault(key));
-//        }
-//    }
+
+    /**
+     * Retrieve a setting's value as an Integer, converting the default value
+     * stored in the DefaultsStore.
+     */
+    public int getInteger(String scope, String key) {
+        synchronized (mLock) {
+            return getInteger(scope, key, getIntegerDefault(key));
+        }
+    }
+
+    /**
+     * Retrieve a default from the DefaultsStore as an Integer.
+     */
+    public Integer getIntegerDefault(String key) {
+        synchronized (mLock) {
+            String defaultValueString = mDefaultsStore.getDefaultValue(key);
+            return defaultValueString == null ? 0 : Integer.parseInt(defaultValueString);
+        }
+    }
 //
 //
 //    /**
