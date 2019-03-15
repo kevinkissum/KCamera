@@ -1,4 +1,4 @@
 package com.example.kevin.kcamera;
 
-class MainActivityLayout {
+public class AndroidCamera2Settings {
 }

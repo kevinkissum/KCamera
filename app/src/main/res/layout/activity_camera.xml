@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.android.camera.ui.MainActivityLayout
+<com.example.kevin.kcamera.View.MainActivityLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/activity_root_view"
     android:layout_width="match_parent"
@@ -8,5 +8,10 @@
 
     <include layout="@layout/camera" />
     <!--<include layout="@layout/camera_filmstrip" />-->
+    <!--<com.android.camera.ui.ModeTransitionView-->
+        <!--android:id="@+id/mode_transition_view"-->
+        <!--android:visibility="gone"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent" />-->
 
-</com.android.camera.ui.MainActivityLayout>
+</com.example.kevin.kcamera.View.MainActivityLayout>

@@ -3,96 +3,47 @@ package com.example.kevin.kcamera;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
+import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Window;
-import android.view.WindowManager;
 
-/**
- * Created by kevin on 2019/1/10.
- */
+public class PermissionsActivity extends AppCompatActivity {
 
-class PermissionsActivity extends AppCompatActivity {
+    private static final String TAG = "PermissionsActivity";
 
+    private static int PERMISSION_REQUEST_CODE = 1;
+    private static int RESULT_CODE_OK = 1;
+    private static int RESULT_CODE_FAILED = 2;
 
-    private static final int PERMISSION_REQUEST_CODE = 0;
-    private static final String TAG = "PermissionActivity";
-    private int mNumPermissionsToRequest;
-    private boolean mShouldRequestCameraPermission ;
-    private boolean mFlagHasCameraPermission;
-    private boolean mShouldRequestMicrophonePermission;
-    private boolean mFlagHasMicrophonePermission;
-    private boolean mShouldRequestStoragePermission;
-    private boolean mFlagHasStoragePermission;
-    private boolean mShouldRequestLocationPermission;
     private int mIndexPermissionRequestCamera;
     private int mIndexPermissionRequestMicrophone;
-    private int mIndexPermissionRequestStorage;
     private int mIndexPermissionRequestLocation;
+    private int mIndexPermissionRequestStorage;
+    private boolean mShouldRequestCameraPermission;
+    private boolean mShouldRequestMicrophonePermission;
+    private boolean mShouldRequestLocationPermission;
+    private boolean mShouldRequestStoragePermission;
+    private int mNumPermissionsToRequest;
+    private boolean mFlagHasCameraPermission;
+    private boolean mFlagHasMicrophonePermission;
+    private boolean mFlagHasStoragePermission;
 
-    /**
-     * Close activity when secure app passes lock screen or screen turns
-     * off.
-     */
-    private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.v(TAG, "received intent, finishing: " + intent.getAction());
-            finish();
-        }
-    };
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.permissions);
-//        mSettingsManager = CameraServicesImpl.instance().getSettingsManager();
-
-        // Filter for screen off so that we can finish permissions activity
-        // when screen is off.
-        IntentFilter filter_screen_off = new IntentFilter(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(mShutdownReceiver, filter_screen_off);
-
-        // Filter for phone unlock so that we can finish permissions activity
-        // via this UI path:
-        //    1. from secure lock screen, user starts secure camera
-        //    2. user presses home button
-        //    3. user unlocks phone
-        IntentFilter filter_user_unlock = new IntentFilter(Intent.ACTION_USER_PRESENT);
-        registerReceiver(mShutdownReceiver, filter_user_unlock);
-
-        Window win = getWindow();
-//        if (isKeyguardLocked()) {
-//            win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-//        } else {
-//            win.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-//        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mNumPermissionsToRequest = 0;
+        setContentView(R.layout.activity_permissions);
         checkPermissions();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.v(TAG, "onDestroy: unregistering receivers");
-        unregisterReceiver(mShutdownReceiver);
-    }
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkPermissions() {
         if (checkSelfPermission(Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -125,48 +76,11 @@ class PermissionsActivity extends AppCompatActivity {
         }
 
         if (mNumPermissionsToRequest != 0) {
-//            if (!isKeyguardLocked() && !mSettingsManager.getBoolean(SettingsManager.SCOPE_GLOBAL,
-//                    Keys.KEY_HAS_SEEN_PERMISSIONS_DIALOGS)) {
-                buildPermissionsRequest();
-//            } else {
-                // Permissions dialog has already been shown, or we're on
-                // lockscreen, and we're still missing permissions.
-//                handlePermissionsFailure();
-//            }
-        } else {
-            handlePermissionsSuccess();
+            buildPermissionsRequest();
         }
     }
 
-    private void handlePermissionsSuccess() {
-        Intent intent = new Intent(this, CameraActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void handlePermissionsFailure() {
-        new AlertDialog.Builder(this).setTitle(getResources().getString(R.string.camera_error_title))
-                .setMessage(getResources().getString(R.string.error_permissions))
-                .setCancelable(false)
-                .setOnKeyListener(new Dialog.OnKeyListener() {
-                    @Override
-                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                        if (keyCode == KeyEvent.KEYCODE_BACK) {
-                            finish();
-                        }
-                        return true;
-                    }
-                })
-                .setPositiveButton(getResources().getString(R.string.dialog_dismiss),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                finish();
-                            }
-                        })
-                .show();
-    }
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void buildPermissionsRequest() {
         String[] permissionsToRequest = new String[mNumPermissionsToRequest];
         int permissionsRequestIndex = 0;
@@ -197,12 +111,7 @@ class PermissionsActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.v(TAG, "onPermissionsResult counts: " + permissions.length + ":" + grantResults.length);
-//        mSettingsManager.set(
-//                SettingsManager.SCOPE_GLOBAL,
-//                Keys.KEY_HAS_SEEN_PERMISSIONS_DIALOGS,
-//                true);
 
         if (mShouldRequestCameraPermission) {
             if (grantResults.length > 0 && grantResults[mIndexPermissionRequestCamera] ==
@@ -242,4 +151,34 @@ class PermissionsActivity extends AppCompatActivity {
             handlePermissionsSuccess();
         }
     }
+
+    private void handlePermissionsSuccess() {
+        Intent intent = new Intent(this, CameraActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void handlePermissionsFailure() {
+        new AlertDialog.Builder(this).setTitle(getResources().getString(R.string.camera_error_title))
+                .setMessage(getResources().getString(R.string.error_permissions))
+                .setCancelable(false)
+                .setOnKeyListener(new Dialog.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            finish();
+                        }
+                        return true;
+                    }
+                })
+                .setPositiveButton(getResources().getString(R.string.dialog_dismiss),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                .show();
+    }
+
 }

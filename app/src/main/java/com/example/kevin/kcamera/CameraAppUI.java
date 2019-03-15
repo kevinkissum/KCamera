@@ -1,7 +1,11 @@
 package com.example.kevin.kcamera;
 
-class CameraAppUI {
-    public CameraAppUI(CameraActivity cameraActivity, MainActivityLayout viewById, Object captureIntent) {
+import com.example.kevin.kcamera.View.MainActivityLayout;
 
+public class CameraAppUI {
+    private final MainActivityLayout mAppRootView;
+
+    public CameraAppUI(MainActivityLayout appRootView) {
+        mAppRootView = appRootView;
     }
 }
