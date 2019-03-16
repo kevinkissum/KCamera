@@ -1,12 +1,14 @@
 package com.example.kevin.kcamera;
 
-import android.app.Activity;
 import android.content.Context;
-import android.hardware.camera2.CameraDevice;
-import android.util.Log;
-import android.util.Size;
+import android.graphics.SurfaceTexture;
+import android.os.Handler;
 
-public class PhotoModule {
+import com.example.kevin.kcamera.Interface.ICameraControll;
+import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
+import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
+
+public class PhotoModule implements ICameraControll{
 
 
     private static final String TAG = "PhotoModule";
@@ -14,77 +16,30 @@ public class PhotoModule {
     private CameraActivity mActivity;
     private Context mContext;
     private PhotoUI mUI;
+    private IPhotoModuleControll mPhotoControl;
 
-    public PhotoModule(Context mAppContext, CameraActivity activity) {
-        init(mAppContext, activity);
+    public PhotoModule(CameraActivity activity, Handler handler) {
+        mCameraControl = new CameraController(activity, handler, this);
     }
 
-    private void init(Context mAppContext, CameraActivity activity) {
-        mActivity = activity;
-        mContext = mAppContext;
-        mUI = new PhotoUI(mActivity, this, mActivity.getModuleLayoutRoot());
+
+    public void openCamera(SurfaceTexture surface, int width, int height) {
+        mCameraControl.setSurfaceTexture(surface);
+        mCameraControl.requestCamera(0, true, width, height);
     }
 
-    public void onCameraAvailable(CameraController controller) {
-        mCameraControl = controller;
-        startPreview();
+
+    @Override
+    public void onCameraOpened() {
+
     }
 
-    private void startPreview() {
-        updateParametersPreViewSize();
-        mCameraControl.setPreviewDisplay(mUI.getSurfaceHolder());
-        mCameraControl.startPreView();
+    @Override
+    public void changePreViewSize(int width, int height) {
+        mPhotoControl.setPreViewSize(width, height);
     }
 
-    private void updateParametersPreViewSize() {
-        if (mCameraControl == null) {
-            Log.w(TAG, "attempting to set picture size without caemra device");
-            return;
-        }
-
-        Size pictureSize;
-        try {
-            pictureSize = mAppController.getResolutionSetting()
-                    .getPictureSize(DataModuleManager.getInstance(mAppController.getAndroidContext()),
-                            mAppController.getCameraProvider()
-                                    .getCurrentCameraId(), cameraFacing);
-        } catch (OneCameraAccessException ex) {
-            mAppController.getFatalErrorHandler()
-                    .onGenericCameraAccessFailure();
-            return;
-        }
-        mCameraSettings.setPhotoSize(pictureSize.toPortabilitySize());
-
-        if (ApiHelper.IS_NEXUS_5) {
-            if (ResolutionUtil.NEXUS_5_LARGE_16_BY_9.equals(pictureSize)) {
-                mShouldResizeTo16x9 = true;
-            } else {
-                mShouldResizeTo16x9 = false;
-            }
-        }
-
-        // SPRD: add fix bug 555245 do not display thumbnail picture in MTP/PTP Mode at pc
-        mCameraSettings.setExifThumbnailSize(CameraUtil.getAdaptedThumbnailSize(pictureSize,
-                mAppController.getCameraProvider()).toPortabilitySize());
-
-        // Set a preview size that is closest to the viewfinder height and has
-        // the right aspect ratio.
-        List<Size> sizes = Size.convert(mCameraCapabilities
-                .getSupportedPreviewSizes());
-        Size optimalSize = CameraUtil.getOptimalPreviewSize(sizes,
-                (double) pictureSize.width() / pictureSize.height());
-        Size original = new Size(mCameraSettings.getCurrentPreviewSize());
-        if (!optimalSize.equals(original)) {
-            Log.i(TAG, "setting preview size. optimal: " + optimalSize
-                    + "original: " + original);
-            mCameraSettings.setPreviewSize(optimalSize.toPortabilitySize());
-        }
-
-        if (optimalSize.width() != 0 && optimalSize.height() != 0) {
-            Log.i(TAG, "updating aspect ratio");
-            mUI.updatePreviewAspectRatio((float) optimalSize.width()
-                    / (float) optimalSize.height());
-        }
-        Log.d(TAG, "Preview size is " + optimalSize);
+    public void setPresenter(IPhotoModuleControll photoControl) {
+        mPhotoControl = photoControl;
     }
 }
