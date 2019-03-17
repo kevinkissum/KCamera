@@ -310,22 +310,50 @@ public class CameraController extends CameraDevice.StateCallback {
 
     private void createCameraPreviewSession() {
         try {
+            // SurfaceTexture用来捕获视频流中的图像帧的，视频流可以是相机预览或者视频解码数据。
+            // SurfaceTexture可以作为android.hardware.camera2, MediaCodec, MediaPlayer, 和 Allocation这些类的目标视频数据输出对象。
+            // 可以调用updateTexImage()方法从视频流数据中更新当前帧。
             SurfaceTexture texture = mSurfaceTexture;
+            // assert condition;
+            // 这里condition是一个必须为真(true)的表达式。如果表达式的结果为true，那么断言为真，并且无任何行动.
+            // 如果表达式为false，则断言失败，则会抛出一个AssertionError对象。这个AssertionError继承于Error对象，
+            // 而Error继承于Throwable，Error是和Exception并列的一个错误对象，通常用于表达系统级运行错误。
             assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
+            // 输出到SurfaceTexture需要进行如下设置
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
 
             // This is the output Surface we need to start preview.
+            // Surface就是SurfaceView中使用的Surface，就是内存中的一段绘图缓冲区。
+            // Surface是用来管理数据的。（句柄）
+            // 1、通过Surface（因为Surface是句柄）就可以获得原生缓冲器以及其中的内容。就像在C++语言中，可以通过一个文件的句柄，就可以获得文件的内容一样。
+            // 2、原始缓冲区（a raw buffer）是用于保存当前窗口的像素数据的。
+            // 3、Surface中有一个Canvas成员，专门用于画图的。
             Surface surface = new Surface(texture);
 
             // We set up a CaptureRequest.Builder with the output Surface.
+            // 我们跟相机通信只有通过CameraCaptureSession。而要和CameraCaptureSession通信就是发送请求。这里我们相当于在创建请求的一些参数。
+            // TEMPLATE_RECORD   创建适合录像的请求。
+            // TEMPLATE_PREVIEW 创建一个适合于相机预览窗口的请求。
+            // TEMPLATE_STILL_CAPTURE 创建适用于静态图像捕获的请求
+            // TEMPLATE_VIDEO_SNAPSHOT  在录制视频时创建适合静态图像捕获的请求。
             mPreviewRequestBuilder
                     = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
 
             // Here, we create a CameraCaptureSession for camera preview.
-            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
+            // 创建会话是一项昂贵的操作，可能需要几百毫秒，因为它需要配置摄像机设备的内部管道并分配内存缓冲区以将图像发送到所需目标。因此，设置是异步完成的，
+            // 如果摄像机设备创建了新会话，则会关闭先前的会话，并将调用其关联的StateCallback＃onClosed回调。
+            // 如果在会话关闭后调用，则所有会话方法都将抛出IllegalStateException。
+            // 关闭会话会清除所有重复请求（就像调用了stopRepeating（）一样），但在新创建的会话接管并重新配置摄像机设备之前，仍将正常完成所有正在进行的捕获请求。
+            // 如果你想节约时间可以invoke abortCaptures，它会discard the remaining requests.
+            // CameraDevices为每一个surface都会创建一个流（Session），还可以加其他类型都surface如：
+            // SurfaceView
+            // MediaCodec
+            // MediaRecorder
+            // AllocationF
+                mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
 
                         @Override
@@ -339,10 +367,19 @@ public class CameraController extends CameraDevice.StateCallback {
                             mCaptureSession = cameraCaptureSession;
                             try {
                                 // Auto focus should be continuous for camera preview.
+                                // 通过set 为请求request添加字段，所有的字段在CaptureRequest中均能找到。
+                                // auto focus默认支持的， 亟需给它指定一种模式
+                                // CONTROL_AF_MODE_OFF
+                                // CONTROL_AF_MODE_AUTO
+                                // CONTROL_AF_MODE_MACRO
+                                // CONTROL_AF_MODE_CONTINUOUS_VIDEO
+                                // CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                                // CONTROL_AF_MODE_EDOF
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
-//                                setAutoFlash(mPreviewRequestBuilder);
+                                // Flash 是AE mode
+                                setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
@@ -362,6 +399,13 @@ public class CameraController extends CameraDevice.StateCallback {
             );
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
+        if (mFlashSupported) {
+            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
         }
     }
 
