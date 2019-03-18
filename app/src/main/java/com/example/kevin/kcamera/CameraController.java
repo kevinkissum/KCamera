@@ -66,6 +66,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
     };
 
+    //
     private CameraCaptureSession.CaptureCallback mCaptureCallback
             = new CameraCaptureSession.CaptureCallback() {
         private void process(CaptureResult result) {
@@ -355,7 +356,8 @@ public class CameraController extends CameraDevice.StateCallback {
             // AllocationF
                 mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
-
+                    // StateCallback
+                    // 创建Session创建成功之后回调， 如果有request submit则之后回调onActive， 反之回调onReady
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed

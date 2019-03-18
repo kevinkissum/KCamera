@@ -6,12 +6,13 @@ import android.widget.FrameLayout;
 
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
+import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.MainActivityLayout;
 
 public class PhotoUI implements TextureView.SurfaceTextureListener{
 
     private FrameLayout mRootView;
-    private TextureView mTextureView;
+    private AutoFitTextureView mTextureView;
     private IPhotoUIStatusListener mPresenter;
 
 
@@ -21,7 +22,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener{
     }
 
     private void init() {
-        mTextureView = (TextureView) mRootView.findViewById(R.id.preview_content);
+        mTextureView = (AutoFitTextureView) mRootView.findViewById(R.id.preview_content);
         mTextureView.setSurfaceTextureListener(this);
     }
 
@@ -46,7 +47,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener{
     }
 
     public void setPreViewSize(int width, int height) {
-
+        mTextureView.setAspectRatio(width, height);
     }
 
     public void setPresenter(IPhotoUIStatusListener presenter) {
