@@ -1,5 +1,6 @@
 package com.example.kevin.kcamera;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -10,6 +11,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
@@ -30,6 +32,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
+import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_PRECAPTURE;
 
 public class CameraController extends CameraDevice.StateCallback {
 
@@ -76,26 +81,30 @@ public class CameraController extends CameraDevice.StateCallback {
 //                    Log.v(TAG, "CaptureCallback STATE_PREVIEW ");
                     break;
                 }
-                case CameraStates.STATE_WAITING_LOCK: {
+                case STATE_WAITING_LOCK: {
                     Log.v(TAG, "CaptureCallback STATE_WAITING_LOCK ");
                     Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
                     if (afState == null) {
-//                        captureStillPicture();
+                        captureStillPicture();
+                        // CONTROL_AF_STATE_FOCUSED_LOCKED AF 已经focused并且locked
+                        // CONTROL_AF_STATE_NOT_FOCUSED_LOCKED AF 失败但是也locked
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
                         Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                         if (aeState == null ||
+                                // AE has a good set of control values for current scene.
                                 aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
                             mState = CameraStates.STATE_PICTURE_TAKEN;
-//                            captureStillPicture();
+                            captureStillPicture();
                         } else {
-//                            runPrecaptureSequence();
+                            runPrecaptureSequence();
                         }
                     }
                     break;
                 }
-                case CameraStates.STATE_WAITING_PRECAPTURE: {
+                // 拍照前等待曝光完成都一种状态
+                case STATE_WAITING_PRECAPTURE: {
                     Log.v(TAG, "CaptureCallback STATE_WAITING_PRECAPTURE ");
                     // CONTROL_AE_STATE can be null on some devices
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
@@ -112,7 +121,7 @@ public class CameraController extends CameraDevice.StateCallback {
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
                         mState = CameraStates.STATE_PICTURE_TAKEN;
-//                        captureStillPicture();
+                        captureStillPicture();
                     }
                     break;
                 }
@@ -134,6 +143,61 @@ public class CameraController extends CameraDevice.StateCallback {
         }
 
     };
+
+    private void runPrecaptureSequence() {
+        try {
+            // This is how to tell the camera to trigger.
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
+                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+            // Tell #mCaptureCallback to wait for the precapture sequence to be set.
+            mState = STATE_WAITING_PRECAPTURE;
+            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
+                    mainHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void captureStillPicture() {
+        try {
+            final Activity activity = mActivity;
+            if (null == activity || null == mCameraDevice) {
+                return;
+            }
+            // This is the CaptureRequest.Builder that we use to take a picture.
+            final CaptureRequest.Builder captureBuilder =
+                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(mImageReader.getSurface());
+
+            // Use the same AE and AF modes as the preview.
+            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            setAutoFlash(captureBuilder);
+
+            // Orientation
+            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
+
+            CameraCaptureSession.CaptureCallback CaptureCallback
+                    = new CameraCaptureSession.CaptureCallback() {
+
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session,
+                                               @NonNull CaptureRequest request,
+                                               @NonNull TotalCaptureResult result) {
+                    showToast("Saved: " + mFile);
+                    Log.d(TAG, mFile.toString());
+                    unlockFocus();
+                }
+            };
+
+            mCaptureSession.stopRepeating();
+            mCaptureSession.abortCaptures();
+            mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     public CameraController(CameraActivity activity, Handler handler, ICameraControll receiver) {
         mActivity = activity;
@@ -410,6 +474,20 @@ public class CameraController extends CameraDevice.StateCallback {
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
         }
     }
+
+    public void takePicture() {
+        try {
+            // This is how to tell the camera to lock focus.
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                    CameraMetadata.CONTROL_AF_TRIGGER_START);
+            // Tell #mCaptureCallback to wait for the lock.
+            mState = STATE_WAITING_LOCK;
+            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
+                    mainHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }    }
+
 
     private void onCameraDisabled(int cameraId) {
 
