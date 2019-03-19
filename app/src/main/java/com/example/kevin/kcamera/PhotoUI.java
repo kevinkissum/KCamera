@@ -9,8 +9,10 @@ import android.widget.FrameLayout;
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
+import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
 import com.example.kevin.kcamera.View.ShutterButton;
+import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
 public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener{
 
@@ -20,7 +22,8 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private ShutterButton mShutter;
     private CaptureLayoutHelper mCaptureLayoutHelper;
     private Context mAppContext;
-
+    private BottomBar mBottomBar;
+    private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
 
     public PhotoUI(Context context, MainActivityLayout rootView) {
         mRootView = rootView;
@@ -39,6 +42,11 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
                 res.getDimensionPixelSize(R.dimen.bottom_bar_height_max),
                 res.getDimensionPixelSize(R.dimen.bottom_bar_height_optimal));
         mRootView.setNonDecorWindowSizeChangedListener(mCaptureLayoutHelper);
+        mBottomBar = mRootView.findViewById(R.id.bottom_bar);
+        mStickyBottomCaptureLayout = mRootView.findViewById(R.id.sticky_bottom_capture_layout);
+        mBottomBar.setCaptureLayoutHelper(mCaptureLayoutHelper);
+        mStickyBottomCaptureLayout.setCaptureLayoutHelper(mCaptureLayoutHelper);
+
 
     }
 

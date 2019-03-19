@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!--<include layout="@layout/sticky_bottom_capture_layout" />-->
+    <!--<include layout="@layout/bottom_bar_contents" />-->
 
     <FrameLayout
         android:id="@+id/tutorials_placeholder_wrapper"
@@ -65,15 +65,7 @@
 
     <!--<include layout="@layout/mode_list_layout" />-->
 
-    <com.example.kevin.kcamera.View.BottomBar
-        android:id="@+id/bottom_bar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom"
-        android:background="#00000000" >
+    <include layout="@layout/sticky_bottom_capture_layout" />
 
-        <include layout="@layout/sticky_bottom_capture_layout" />
-
-    </com.example.kevin.kcamera.View.BottomBar>
 
 </FrameLayout>

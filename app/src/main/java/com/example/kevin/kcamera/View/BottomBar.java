@@ -93,6 +93,10 @@ public class BottomBar extends FrameLayout {
         setPaintColor(mBackgroundAlpha, mBackgroundPressedColor);
     }
 
+    public void setCaptureLayoutHelper(CaptureLayoutHelper helper) {
+        mCaptureLayoutHelper = helper;
+    }
+
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int measureWidth = MeasureSpec.getSize(widthMeasureSpec);
@@ -106,6 +110,10 @@ public class BottomBar extends FrameLayout {
             Log.e(TAG, "Capture layout helper needs to be set first.");
         } else {
             RectF bottomBarRect = mCaptureLayoutHelper.getBottomBarRect();
+            Log.e("kk", "   bottomBarRect " + bottomBarRect.toString());
+            Log.e("kk", "   bottomBarRect " + bottomBarRect.width());
+            Log.e("kk", "   bottomBarRect " + bottomBarRect.height());
+
             super.onMeasure(MeasureSpec.makeMeasureSpec(
                     (int) bottomBarRect.width(), MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec((int) bottomBarRect.height(), MeasureSpec.EXACTLY)
@@ -114,6 +122,7 @@ public class BottomBar extends FrameLayout {
             setOverlayBottomBar(shouldOverlayBottomBar);
         }
     }
+
 
     private void setOverlayBottomBar(boolean overlay) {
 

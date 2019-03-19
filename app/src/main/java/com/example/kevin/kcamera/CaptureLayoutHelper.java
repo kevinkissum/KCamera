@@ -20,11 +20,18 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
         mBottomBarMinHeight = bottomBarMinHeight;
         mBottomBarMaxHeight = bottomBarMaxHeight;
         mBottomBarOptimalHeight = bottomBarOptimalHeight;
+        Log.d("kk", "updatePositionConfiguration: " +
+                "mBottomBarMinHeight " + mBottomBarMinHeight
+                + " mBottomBarMaxHeight " + mBottomBarMaxHeight
+                + " mBottomBarOptimalHeight " + mBottomBarOptimalHeight);
+
     }
 
     public void setAspectRatio(float aspectRatio) {
         Log.d(TAG, "setAspectRatio: " + aspectRatio);
         mAspectRatio = aspectRatio;
+        updatePositionConfiguration();
+
     }
 
     public RectF getBottomBarRect() {

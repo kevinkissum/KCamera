@@ -1,38 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:id="@+id/bottombar_capture"
+<com.example.kevin.kcamera.View.StickyBottomCaptureLayout
+    android:id="@+id/sticky_bottom_capture_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.example.kevin.kcamera.View.BottomBar
+        android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible" >
-        <com.example.kevin.kcamera.View.ShutterButton
-            android:id="@+id/shutter_button"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:scaleType="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_camera" />
-    </FrameLayout>
+        android:gravity="center"
+        android:background="#00000000" >
 
-    <!--<FrameLayout-->
-        <!--android:id="@+id/bottombar_cancel"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:visibility="visible" >-->
-        <!--<ImageButton-->
-            <!--android:id="@+id/shutter_cancel_button"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_gravity="center"-->
-            <!--android:scaleType="center"-->
-            <!--android:clickable="true"-->
-            <!--android:focusable="true"-->
-            <!--android:src="@drawable/ic_cancel" />-->
-    <!--</FrameLayout>-->
+        <include layout="@layout/bottom_bar_contents" />
 
-</merge>
+    </com.example.kevin.kcamera.View.BottomBar>
+
+
+</com.example.kevin.kcamera.View.StickyBottomCaptureLayout>
