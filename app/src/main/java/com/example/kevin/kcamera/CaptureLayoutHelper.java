@@ -2,8 +2,11 @@ package com.example.kevin.kcamera;
 
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.util.Log;
 
 public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedListener{
+
+    public static final String TAG = "CaptureLayoutHelper";
 
     private PositionConfiguration mPositionConfiguration = null;
     private int mWindowWidth, mWindowHeight;
@@ -19,6 +22,10 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
         mBottomBarOptimalHeight = bottomBarOptimalHeight;
     }
 
+    public void setAspectRatio(float aspectRatio) {
+        Log.d(TAG, "setAspectRatio: " + aspectRatio);
+        mAspectRatio = aspectRatio;
+    }
 
     public RectF getBottomBarRect() {
         if (mPositionConfiguration == null) {
@@ -43,6 +50,7 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
     }
 
     private void updatePositionConfiguration() {
+        Log.d(TAG, "updatePositionConfiguration: mAspectRatio " + mAspectRatio + " mWindowWidth " + mWindowWidth + " mWindowHeight " + mWindowHeight + " mRotation " + mRotation);
         if (mWindowWidth == 0 || mWindowHeight == 0) {
             return;
         }

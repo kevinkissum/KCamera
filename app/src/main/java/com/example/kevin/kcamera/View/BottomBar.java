@@ -62,9 +62,6 @@ public class BottomBar extends FrameLayout {
         super.onFinishInflate();
         mCaptureLayout =
                 (FrameLayout) findViewById(R.id.bottombar_capture);
-        mCancelLayout =
-                (FrameLayout) findViewById(R.id.bottombar_cancel);
-        mCancelLayout.setVisibility(View.GONE);
 
         mShutterButton =
                 (ShutterButton) findViewById(R.id.shutter_button);

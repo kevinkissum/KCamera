@@ -39,6 +39,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
                 res.getDimensionPixelSize(R.dimen.bottom_bar_height_max),
                 res.getDimensionPixelSize(R.dimen.bottom_bar_height_optimal));
         mRootView.setNonDecorWindowSizeChangedListener(mCaptureLayoutHelper);
+
     }
 
     @Override
@@ -48,7 +49,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+        mCaptureLayoutHelper.setAspectRatio((float)width / height);
     }
 
     @Override

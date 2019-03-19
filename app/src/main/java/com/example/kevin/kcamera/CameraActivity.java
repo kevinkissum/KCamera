@@ -45,6 +45,7 @@ public class CameraActivity extends AppCompatActivity {
      }
 
     private void init() {
+        AndroidContext.initialize(getApplicationContext());
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
         mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
