@@ -49,7 +49,7 @@ public class CameraActivity extends AppCompatActivity {
         mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
         mCurrentModule = new PhotoModule(this, mMainHandler);
-        mPhotoUI = new PhotoUI(mRootView);
+        mPhotoUI = new PhotoUI(mAppContext, mRootView);
         mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mPhotoUI);
         mCurrentModule.setPresenter(mPresenter);
         mPhotoUI.setPresenter(mPresenter);
@@ -64,7 +64,7 @@ public class CameraActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkPermissions() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            Log.v(TAG, "not running on M, skipping permission checks");
+            Log.d(TAG, "not running on M, skipping permission checks");
             mHasCriticalPermissions = true;
             return;
         }

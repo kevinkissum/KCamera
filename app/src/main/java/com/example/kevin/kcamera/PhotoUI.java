@@ -1,5 +1,7 @@
 package com.example.kevin.kcamera;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.SurfaceTexture;
 import android.view.TextureView;
 import android.widget.FrameLayout;
@@ -8,22 +10,35 @@ import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.MainActivityLayout;
+import com.example.kevin.kcamera.View.ShutterButton;
 
-public class PhotoUI implements TextureView.SurfaceTextureListener{
+public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener{
 
-    private FrameLayout mRootView;
+    private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
     private IPhotoUIStatusListener mPresenter;
+    private ShutterButton mShutter;
+    private CaptureLayoutHelper mCaptureLayoutHelper;
+    private Context mAppContext;
 
 
-    public PhotoUI(MainActivityLayout rootView) {
+    public PhotoUI(Context context, MainActivityLayout rootView) {
         mRootView = rootView;
+        mAppContext = context;
         init();
     }
 
     private void init() {
+        Resources res = mAppContext.getResources();
         mTextureView = (AutoFitTextureView) mRootView.findViewById(R.id.preview_content);
         mTextureView.setSurfaceTextureListener(this);
+        mShutter = mRootView.findViewById(R.id.shutter_button);
+        mShutter.addOnShutterButtonListener(this);
+        mCaptureLayoutHelper = new CaptureLayoutHelper(
+                res.getDimensionPixelSize(R.dimen.bottom_bar_height_min),
+                res.getDimensionPixelSize(R.dimen.bottom_bar_height_max),
+                res.getDimensionPixelSize(R.dimen.bottom_bar_height_optimal));
+        mRootView.setNonDecorWindowSizeChangedListener(mCaptureLayoutHelper);
     }
 
     @Override
@@ -52,5 +67,25 @@ public class PhotoUI implements TextureView.SurfaceTextureListener{
 
     public void setPresenter(IPhotoUIStatusListener presenter) {
         mPresenter = presenter;
+    }
+
+    @Override
+    public void onShutterButtonFocus(boolean pressed) {
+
+    }
+
+    @Override
+    public void onShutterButtonClick() {
+        android.util.Log.d("kk", "  photoUI shutter click ");
+        mPresenter.onShutterButtonClick();
+    }
+
+    @Override
+    public void onShutterButtonLongPressed() {
+
+    }
+
+    public interface NonDecorWindowSizeChangedListener {
+        public void onNonDecorWindowSizeChanged(int width, int height, int rotation);
     }
 }

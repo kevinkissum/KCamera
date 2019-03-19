@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.example.kevin.kcamera.CameraStates.STATE_PREVIEW;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_PRECAPTURE;
 
@@ -58,7 +59,7 @@ public class CameraController extends CameraDevice.StateCallback {
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private CameraCaptureSession mCaptureSession;
     private CaptureRequest mPreviewRequest;
-    private int mState = CameraStates.STATE_PREVIEW;
+    private int mState = STATE_PREVIEW;
 
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = new ImageReader.OnImageAvailableListener() {
@@ -66,7 +67,7 @@ public class CameraController extends CameraDevice.StateCallback {
         @Override
         public void onImageAvailable(ImageReader reader) {
 //            mainHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
-            Log.v(TAG, "OnImageAvailableListener");
+            Log.d(TAG, "OnImageAvailableListener");
         }
 
     };
@@ -76,14 +77,14 @@ public class CameraController extends CameraDevice.StateCallback {
             = new CameraCaptureSession.CaptureCallback() {
         private void process(CaptureResult result) {
             switch (mState) {
-                case CameraStates.STATE_PREVIEW: {
+                case STATE_PREVIEW: {
                     // We have nothing to do when the camera preview is working normally.
-//                    Log.v(TAG, "CaptureCallback STATE_PREVIEW ");
+//                    Log.d(TAG, "CaptureCallback STATE_PREVIEW ");
                     break;
                 }
                 case STATE_WAITING_LOCK: {
-                    Log.v(TAG, "CaptureCallback STATE_WAITING_LOCK ");
                     Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                    Log.d(TAG, "CaptureCallback STATE_WAITING_LOCK " + afState);
                     if (afState == null) {
                         captureStillPicture();
                         // CONTROL_AF_STATE_FOCUSED_LOCKED AF 已经focused并且locked
@@ -92,6 +93,7 @@ public class CameraController extends CameraDevice.StateCallback {
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
                         Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
+                        Log.d(TAG, "CaptureCallback CONTROL_AE_STATE " + aeState);
                         if (aeState == null ||
                                 // AE has a good set of control values for current scene.
                                 aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
@@ -105,7 +107,7 @@ public class CameraController extends CameraDevice.StateCallback {
                 }
                 // 拍照前等待曝光完成都一种状态
                 case STATE_WAITING_PRECAPTURE: {
-                    Log.v(TAG, "CaptureCallback STATE_WAITING_PRECAPTURE ");
+                    Log.d(TAG, "CaptureCallback STATE_WAITING_PRECAPTURE ");
                     // CONTROL_AE_STATE can be null on some devices
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null ||
@@ -116,7 +118,7 @@ public class CameraController extends CameraDevice.StateCallback {
                     break;
                 }
                 case CameraStates.STATE_WAITING_NON_PRECAPTURE: {
-                    Log.v(TAG, "CaptureCallback STATE_WAITING_NON_PRECAPTURE ");
+                    Log.d(TAG, "CaptureCallback STATE_WAITING_NON_PRECAPTURE ");
                     // CONTROL_AE_STATE can be null on some devices
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
@@ -176,7 +178,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
+//            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
 
             CameraCaptureSession.CaptureCallback CaptureCallback
                     = new CameraCaptureSession.CaptureCallback() {
@@ -185,8 +187,8 @@ public class CameraController extends CameraDevice.StateCallback {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    showToast("Saved: " + mFile);
-                    Log.d(TAG, mFile.toString());
+//                    Util.showToast(mActivity, "Saved: " + mFile);
+                    Log.d(TAG, "Save pic ".toString());
                     unlockFocus();
                 }
             };
@@ -194,6 +196,23 @@ public class CameraController extends CameraDevice.StateCallback {
             mCaptureSession.stopRepeating();
             mCaptureSession.abortCaptures();
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void unlockFocus() {
+        try {
+            // Reset the auto-focus trigger
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+            setAutoFlash(mPreviewRequestBuilder);
+            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
+                    mainHandler);
+            // After this, the camera will go back to the normal state of preview.
+            mState = STATE_PREVIEW;
+            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
+                    mainHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -209,7 +228,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
 
     public void requestCamera(int id, boolean useNewApi, int width, int height) {
-        Log.v(TAG, "requestCamera");
+        Log.d(TAG, "requestCamera");
         if (mRequestingCameraId == id) {
             return;
         }
@@ -221,7 +240,7 @@ public class CameraController extends CameraDevice.StateCallback {
             setUpCameraOutputs(width, height);
             checkAndOpenCamera(mCameraManager, id, mainHandler, this);
         } /*else if (mCameraProxy.getCameraId() != id) {
-            Log.v(TAG, "different camera already opened, closing then reopening");
+            Log.d(TAG, "different camera already opened, closing then reopening");
             // Already has camera opened, and is switching cameras and/or APIs.
             if (useNewApi) {
                 mCameraAgentNg.closeCamera(mCameraProxy, true);
@@ -232,7 +251,7 @@ public class CameraController extends CameraDevice.StateCallback {
             checkAndOpenCamera(mCameraManager, id, mainHandler, this);
         } else {
             // The same camera, just do a reconnect.
-            Log.v(TAG, "reconnecting to use the existing camera");
+            Log.d(TAG, "reconnecting to use the existing camera");
             mCameraProxy.reconnect(mCallbackHandler, this);
             mCameraProxy = null;
         }*/
@@ -240,7 +259,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
     private void checkAndOpenCamera(CameraManager cameraManager,
                                            final int cameraId, Handler handler, final CameraDevice.StateCallback cb) {
-        Log.v(TAG, "checkAndOpenCamera");
+        Log.d(TAG, "checkAndOpenCamera");
         try {
             cameraManager.openCamera(cameraId + "", cb, handler);
         } catch (Exception ex) {
@@ -486,7 +505,28 @@ public class CameraController extends CameraDevice.StateCallback {
                     mainHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        }    }
+        }
+    }
+
+    public void StartTakePicture() {
+        lockFocus();
+    }
+
+    private void lockFocus() {
+        try {
+            // This is how to tell the camera to lock focus.
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                    CameraMetadata.CONTROL_AF_TRIGGER_START);
+            // Tell #mCaptureCallback to wait for the lock.
+            mState = STATE_WAITING_LOCK;
+            Log.e(TAG, " lockFocus CONTROL_AF_TRIGGER >> STATE_WAITING_LOCK ");
+            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
+                    mainHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+            Log.e(TAG, " lockFocus " + e);
+        }
+    }
 
 
     private void onCameraDisabled(int cameraId) {

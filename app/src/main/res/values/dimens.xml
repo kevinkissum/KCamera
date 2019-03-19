@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="bottom_bar_height_min">84dp</dimen>
+    <dimen name="bottom_bar_height_max">120dp</dimen>
+    <dimen name="bottom_bar_height_optimal">96dp</dimen>
+    <dimen name="bottom_bar_button_spacing">48dp</dimen>
+
+</resources>

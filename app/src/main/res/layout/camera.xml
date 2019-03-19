@@ -64,6 +64,16 @@
     </FrameLayout>
 
     <!--<include layout="@layout/mode_list_layout" />-->
-    <include layout="@layout/sticky_bottom_capture_layout" />
+
+    <com.example.kevin.kcamera.View.BottomBar
+        android:id="@+id/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:background="#00000000" >
+
+        <include layout="@layout/sticky_bottom_capture_layout" />
+
+    </com.example.kevin.kcamera.View.BottomBar>
 
 </FrameLayout>

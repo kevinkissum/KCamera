@@ -105,13 +105,13 @@ public class PermissionsActivity extends AppCompatActivity {
             mIndexPermissionRequestLocation = permissionsRequestIndex;
         }
 
-        Log.v(TAG, "requestPermissions count: " + permissionsToRequest.length);
+        Log.d(TAG, "requestPermissions count: " + permissionsToRequest.length);
         requestPermissions(permissionsToRequest, PERMISSION_REQUEST_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        Log.v(TAG, "onPermissionsResult counts: " + permissions.length + ":" + grantResults.length);
+        Log.d(TAG, "onPermissionsResult counts: " + permissions.length + ":" + grantResults.length);
 
         if (mShouldRequestCameraPermission) {
             if (grantResults.length > 0 && grantResults[mIndexPermissionRequestCamera] ==

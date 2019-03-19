@@ -42,4 +42,9 @@ public class PhotoModule implements ICameraControll{
     public void setPresenter(IPhotoModuleControll photoControl) {
         mPhotoControl = photoControl;
     }
+
+    public void takePicture() {
+        android.util.Log.d("kk", "  PhotoModule shutter click ");
+        mCameraControl.StartTakePicture();
+    }
 }

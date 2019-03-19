@@ -28,4 +28,11 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
     public void setPreViewSize(int width, int height) {
         mPhotoUI.setPreViewSize(width, height);
     }
+
+    @Override
+    public void onShutterButtonClick() {
+        android.util.Log.d("kk", "  Presenter shutter click ");
+
+        mPhotoModule.takePicture();
+    }
 }
