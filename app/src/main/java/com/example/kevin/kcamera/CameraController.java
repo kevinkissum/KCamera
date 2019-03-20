@@ -227,7 +227,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
 
     public void requestCamera(int id, boolean useNewApi) {
-        Log.d(TAG, "requestCamera");
+        Log.d(TAG, "requestCamera " + id );
         if (mRequestingCameraId == id) {
             return;
         }

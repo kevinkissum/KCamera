@@ -1,9 +1,11 @@
 package com.example.kevin.kcamera;
 
 import android.Manifest;
+import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,6 +14,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
 
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -32,6 +35,7 @@ public class CameraActivity extends AppCompatActivity {
     private PhotoUI mPhotoUI;
     private MainActivityLayout mRootView;
     private PhotoUI2ModulePresenter mPresenter;
+    private ActionBar mActionBar;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -40,7 +44,9 @@ public class CameraActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         checkPermissions();
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_camera);
+        getSupportActionBar().hide();
         init();
      }
 

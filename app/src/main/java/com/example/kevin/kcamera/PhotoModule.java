@@ -19,7 +19,6 @@ public class PhotoModule implements ICameraControll{
     private PhotoUI mUI;
     private IPhotoModuleControll mPhotoControl;
     private boolean mPaused;
-    private int mPendingSwitchCameraId;
     private int mCameraId;
 
     public PhotoModule(CameraActivity activity, Handler handler) {
@@ -56,7 +55,7 @@ public class PhotoModule implements ICameraControll{
             return;
         }
         closeCamera();
-        mCameraId = mPendingSwitchCameraId;
+        mCameraId ^= 1;
         mCameraControl.requestCamera(mCameraId, true);
     }
 
