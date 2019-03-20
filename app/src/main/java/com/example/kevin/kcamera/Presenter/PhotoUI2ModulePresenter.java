@@ -1,6 +1,7 @@
 package com.example.kevin.kcamera.Presenter;
 
 import android.graphics.SurfaceTexture;
+import android.util.Log;
 
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
@@ -31,8 +32,11 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
 
     @Override
     public void onShutterButtonClick() {
-        android.util.Log.d("kk", "  Presenter shutter click ");
-
         mPhotoModule.takePicture();
+    }
+
+    @Override
+    public void switchCamera() {
+        mPhotoModule.switchCamera();
     }
 }

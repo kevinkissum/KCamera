@@ -22,10 +22,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
-import android.view.TextureView;
 
 import com.example.kevin.kcamera.Interface.ICameraControll;
-import com.example.kevin.kcamera.CameraStates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +58,7 @@ public class CameraController extends CameraDevice.StateCallback {
     private CameraCaptureSession mCaptureSession;
     private CaptureRequest mPreviewRequest;
     private int mState = STATE_PREVIEW;
+    private int mSurfaceWidth, mSurfaceHeight;
 
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = new ImageReader.OnImageAvailableListener() {
@@ -227,7 +226,7 @@ public class CameraController extends CameraDevice.StateCallback {
     }
 
 
-    public void requestCamera(int id, boolean useNewApi, int width, int height) {
+    public void requestCamera(int id, boolean useNewApi) {
         Log.d(TAG, "requestCamera");
         if (mRequestingCameraId == id) {
             return;
@@ -237,7 +236,7 @@ public class CameraController extends CameraDevice.StateCallback {
 
         if (mCameraDevice == null) {
             // No camera yet.
-            setUpCameraOutputs(width, height);
+            setUpCameraOutputs(mSurfaceWidth, mSurfaceHeight);
             checkAndOpenCamera(mCameraManager, id, mainHandler, this);
         } /*else if (mCameraProxy.getCameraId() != id) {
             Log.d(TAG, "different camera already opened, closing then reopening");
@@ -258,7 +257,7 @@ public class CameraController extends CameraDevice.StateCallback {
     }
 
     private void checkAndOpenCamera(CameraManager cameraManager,
-                                           final int cameraId, Handler handler, final CameraDevice.StateCallback cb) {
+                                    final int cameraId, Handler handler, final CameraDevice.StateCallback cb) {
         Log.d(TAG, "checkAndOpenCamera");
         try {
             cameraManager.openCamera(cameraId + "", cb, handler);
@@ -357,8 +356,8 @@ public class CameraController extends CameraDevice.StateCallback {
     }
 
     private Size chooseOptimalSize(Size[] choices, int textureViewWidth,
-                                     int textureViewHeight, int maxWidth,
-                                     int maxHeight, Size aspectRatio) {
+                                   int textureViewHeight, int maxWidth,
+                                   int maxHeight, Size aspectRatio) {
         Log.e(TAG, "   changePreViewSize: " + textureViewWidth +  " * " + textureViewHeight +  "   " + maxWidth +  " * " + maxHeight) ;
 
         // Collect the supported resolutions that are at least as big as the preview Surface
@@ -437,10 +436,10 @@ public class CameraController extends CameraDevice.StateCallback {
             // MediaCodec
             // MediaRecorder
             // AllocationF
-                mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
+            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
-                    // StateCallback
-                    // 创建Session创建成功之后回调， 如果有request submit则之后回调onActive， 反之回调onReady
+                        // StateCallback
+                        // 创建Session创建成功之后回调， 如果有request submit则之后回调onActive， 反之回调onReady
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed
@@ -553,8 +552,25 @@ public class CameraController extends CameraDevice.StateCallback {
 
     }
 
-    public void setSurfaceTexture(SurfaceTexture surface) {
+    public void setSurfaceTexture(SurfaceTexture surface, int width, int height) {
         mSurfaceTexture = surface;
+        mSurfaceWidth = width;
+        mSurfaceHeight = height;
+    }
+
+    public void closeCamera() {
+        if (null != mCaptureSession) {
+            mCaptureSession.close();
+            mCaptureSession = null;
+        }
+        if (null != mCameraDevice) {
+            mCameraDevice.close();
+            mCameraDevice = null;
+        }
+        if (null != mImageReader) {
+            mImageReader.close();
+            mImageReader = null;
+        }
     }
 
 

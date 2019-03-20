@@ -3,6 +3,7 @@ package com.example.kevin.kcamera;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
+import android.util.Log;
 
 import com.example.kevin.kcamera.Interface.ICameraControll;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
@@ -17,6 +18,9 @@ public class PhotoModule implements ICameraControll{
     private Context mContext;
     private PhotoUI mUI;
     private IPhotoModuleControll mPhotoControl;
+    private boolean mPaused;
+    private int mPendingSwitchCameraId;
+    private int mCameraId;
 
     public PhotoModule(CameraActivity activity, Handler handler) {
         mCameraControl = new CameraController(activity, handler, this);
@@ -24,8 +28,8 @@ public class PhotoModule implements ICameraControll{
 
 
     public void openCamera(SurfaceTexture surface, int width, int height) {
-        mCameraControl.setSurfaceTexture(surface);
-        mCameraControl.requestCamera(0, true, width, height);
+        mCameraControl.setSurfaceTexture(surface, width, height);
+        mCameraControl.requestCamera(mCameraId, true);
     }
 
 
@@ -44,7 +48,19 @@ public class PhotoModule implements ICameraControll{
     }
 
     public void takePicture() {
-        android.util.Log.d("kk", "  PhotoModule shutter click ");
         mCameraControl.StartTakePicture();
+    }
+
+    public void switchCamera() {
+        if (mPaused) {
+            return;
+        }
+        closeCamera();
+        mCameraId = mPendingSwitchCameraId;
+        mCameraControl.requestCamera(mCameraId, true);
+    }
+
+    private void closeCamera() {
+        mCameraControl.closeCamera();
     }
 }

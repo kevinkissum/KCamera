@@ -3,36 +3,63 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <FrameLayout
-        android:id="@+id/bottombar_capture"
+    <LinearLayout
+        android:id="@+id/bottom_panel_parent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible" >
-        <com.example.kevin.kcamera.View.ShutterButton
-            android:id="@+id/shutter_button"
-            android:layout_width="match_parent"
+        android:paddingTop="16dp"
+        android:orientation="horizontal" >
+
+        <FrameLayout
+            android:id="@+id/bottom_panel_left"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:scaleType="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_camera" />
-    </FrameLayout>
+            android:layout_weight="1" >
 
-    <!--<FrameLayout-->
-        <!--android:id="@+id/bottombar_cancel"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:visibility="visible" >-->
-        <!--<ImageButton-->
-            <!--android:id="@+id/shutter_cancel_button"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_gravity="center"-->
-            <!--android:scaleType="center"-->
-            <!--android:clickable="true"-->
-            <!--android:focusable="true"-->
-            <!--android:src="@drawable/ic_cancel" />-->
-    <!--</FrameLayout>-->
+            <com.example.kevin.kcamera.View.RoundedThumbnailView
+                android:id="@+id/rounded_thumbnail_view"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleType="center"
+                android:visibility="visible" />
+        </FrameLayout>
 
+        <FrameLayout
+            android:id="@+id/bottom_panel_center"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" >
+
+            <com.example.kevin.kcamera.View.ShutterButton
+                android:id="@+id/shutter_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:scaleType="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_camera" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/bottom_panel_right"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" >
+
+            <com.example.kevin.kcamera.View.RotateImageView
+                android:id="@+id/camera_switch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_switch_camera"
+                android:visibility="visible"/>
+        </FrameLayout>
+
+    </LinearLayout>
 </merge>

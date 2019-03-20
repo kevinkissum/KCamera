@@ -60,9 +60,6 @@ public class BottomBar extends FrameLayout {
     @Override
     public void onFinishInflate() {
         super.onFinishInflate();
-        mCaptureLayout =
-                (FrameLayout) findViewById(R.id.bottombar_capture);
-
         mShutterButton =
                 (ShutterButton) findViewById(R.id.shutter_button);
         mShutterButton.setOnTouchListener(new OnTouchListener() {
@@ -110,9 +107,6 @@ public class BottomBar extends FrameLayout {
             Log.e(TAG, "Capture layout helper needs to be set first.");
         } else {
             RectF bottomBarRect = mCaptureLayoutHelper.getBottomBarRect();
-            Log.e("kk", "   bottomBarRect " + bottomBarRect.toString());
-            Log.e("kk", "   bottomBarRect " + bottomBarRect.width());
-            Log.e("kk", "   bottomBarRect " + bottomBarRect.height());
 
             super.onMeasure(MeasureSpec.makeMeasureSpec(
                     (int) bottomBarRect.width(), MeasureSpec.EXACTLY),

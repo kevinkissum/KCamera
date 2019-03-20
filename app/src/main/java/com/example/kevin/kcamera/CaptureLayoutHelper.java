@@ -20,11 +20,7 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
         mBottomBarMinHeight = bottomBarMinHeight;
         mBottomBarMaxHeight = bottomBarMaxHeight;
         mBottomBarOptimalHeight = bottomBarOptimalHeight;
-        Log.d("kk", "updatePositionConfiguration: " +
-                "mBottomBarMinHeight " + mBottomBarMinHeight
-                + " mBottomBarMaxHeight " + mBottomBarMaxHeight
-                + " mBottomBarOptimalHeight " + mBottomBarOptimalHeight);
-
+        Log.d(TAG, "CaptureLayoutHelper : bottomBarMinHeight " + bottomBarMinHeight + " bottomBarMaxHeight " + bottomBarMaxHeight + " bottomBarOptimalHeight " + bottomBarOptimalHeight);
     }
 
     public void setAspectRatio(float aspectRatio) {
@@ -78,6 +74,7 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
             if (landscape) {
                 config.mBottomBarRect.set(width - mBottomBarOptimalHeight, 0, width, height);
             } else {
+                Log.d(TAG, "updatePositionConfiguration-------------------- 1 ------ ");
                 config.mBottomBarRect.set(0, height - mBottomBarOptimalHeight, width, height);
             }
         } else {
@@ -95,6 +92,7 @@ public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedLis
 
             float previewShorterEdge;
             float previewLongerEdge;
+            Log.d(TAG, "updatePositionConfiguration-previewAspectRatio>>>>>>  " + previewAspectRatio + " remainingSpaceAlongLongerEdge >>> " + remainingSpaceAlongLongerEdge);
             if (remainingSpaceAlongLongerEdge <= 0) {
                 // Preview aspect ratio > screen aspect ratio: fit longer edge.
                 previewLongerEdge = longerEdge;

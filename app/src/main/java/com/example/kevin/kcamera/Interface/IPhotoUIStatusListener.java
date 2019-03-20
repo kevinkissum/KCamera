@@ -6,4 +6,5 @@ public interface IPhotoUIStatusListener {
 
     public void onPreviewUIReady(SurfaceTexture surface, int width, int height);
     public void onShutterButtonClick();
+    public void switchCamera();
 }

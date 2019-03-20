@@ -3,7 +3,9 @@ package com.example.kevin.kcamera;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.SurfaceTexture;
+import android.util.Log;
 import android.view.TextureView;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
@@ -11,10 +13,11 @@ import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
+import com.example.kevin.kcamera.View.RotateImageView;
 import com.example.kevin.kcamera.View.ShutterButton;
 import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
-public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener{
+public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener {
 
     private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
@@ -24,6 +27,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private Context mAppContext;
     private BottomBar mBottomBar;
     private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
+    private RotateImageView mSwitchCamera;
 
     public PhotoUI(Context context, MainActivityLayout rootView) {
         mRootView = rootView;
@@ -46,7 +50,8 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
         mStickyBottomCaptureLayout = mRootView.findViewById(R.id.sticky_bottom_capture_layout);
         mBottomBar.setCaptureLayoutHelper(mCaptureLayoutHelper);
         mStickyBottomCaptureLayout.setCaptureLayoutHelper(mCaptureLayoutHelper);
-
+        mSwitchCamera = mRootView.findViewById(R.id.camera_switch);
+        mSwitchCamera.setOnClickListener(this);
 
     }
 
@@ -85,13 +90,21 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
 
     @Override
     public void onShutterButtonClick() {
-        android.util.Log.d("kk", "  photoUI shutter click ");
         mPresenter.onShutterButtonClick();
     }
 
     @Override
     public void onShutterButtonLongPressed() {
 
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.camera_switch:
+                mPresenter.switchCamera();
+                break;
+        }
     }
 
     public interface NonDecorWindowSizeChangedListener {
