@@ -15,5 +15,6 @@
     <dimen name="rounded_thumbnail_ripple_ring_thick_max">5dp</dimen>
     <dimen name="rounded_thumbnail_ripple_ring_thick_min">1dp</dimen>
 
+    <dimen name="option_button_circle_size">48dp</dimen>
 
 </resources>

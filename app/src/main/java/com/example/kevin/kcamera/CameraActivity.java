@@ -5,7 +5,6 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,11 +17,12 @@ import android.view.Window;
 
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
+import com.example.kevin.kcamera.Interface.AppControll;
 
 import java.lang.ref.WeakReference;
 
 
-public class CameraActivity extends AppCompatActivity {
+public class CameraActivity extends AppCompatActivity implements AppControll {
 
     public static final String TAG = "CAM_CamActivity";
     private boolean mHasCriticalPermissions;
@@ -36,6 +36,7 @@ public class CameraActivity extends AppCompatActivity {
     private MainActivityLayout mRootView;
     private PhotoUI2ModulePresenter mPresenter;
     private ActionBar mActionBar;
+    private ButtonManager mButtonManager;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -56,7 +57,7 @@ public class CameraActivity extends AppCompatActivity {
         mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
         mCurrentModule = new PhotoModule(this, mMainHandler);
-        mPhotoUI = new PhotoUI(mAppContext, mRootView);
+        mPhotoUI = new PhotoUI(this, mRootView);
         mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mPhotoUI);
         mCurrentModule.setPresenter(mPresenter);
         mPhotoUI.setPresenter(mPresenter);
@@ -87,6 +88,14 @@ public class CameraActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
+    }
+
+    @Override
+    public ButtonManager getButtonManager() {
+        if (mButtonManager == null) {
+            mButtonManager = new ButtonManager(this);
+        }
+        return mButtonManager;
     }
 
     private static class MainHandler extends Handler {

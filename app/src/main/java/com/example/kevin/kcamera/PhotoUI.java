@@ -19,6 +19,7 @@ import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
 public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener {
 
+    private static final String TAG = "PhotoUI";
     private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
     private IPhotoUIStatusListener mPresenter;
@@ -28,10 +29,32 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private BottomBar mBottomBar;
     private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
     private RotateImageView mSwitchCamera;
+    private CameraActivity mActivity;
 
-    public PhotoUI(Context context, MainActivityLayout rootView) {
+    private final ButtonManager.ButtonCallback mCameraCallback =
+            new ButtonManager.ButtonCallback() {
+                @Override
+                public void onStateChanged(int state) {
+
+                    ButtonManager buttonManager = mActivity.getButtonManager();
+//                    buttonManager.disableCameraButtonAndBlock();
+                    Log.d(TAG, "Start to switch camera. cameraId=" + state);
+                    mPresenter.switchCamera();
+                }
+            };
+
+    private ButtonManager.ButtonCallback getDisableButtonCallback(final int conflictingButton) {
+        return new ButtonManager.ButtonCallback() {
+            @Override
+            public void onStateChanged(int state) {
+                mActivity.getButtonManager().disableButton(conflictingButton);
+            }
+        };
+    }
+
+    public PhotoUI(CameraActivity activity, MainActivityLayout rootView) {
         mRootView = rootView;
-        mAppContext = context;
+        mActivity = activity;
         init();
     }
 
@@ -52,7 +75,10 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
         mStickyBottomCaptureLayout.setCaptureLayoutHelper(mCaptureLayoutHelper);
         mSwitchCamera = mRootView.findViewById(R.id.camera_switch);
         mSwitchCamera.setOnClickListener(this);
-
+        ButtonManager buttonManager = mActivity.getButtonManager();
+        buttonManager.initializeButton(
+                ButtonManager.BUTTON_CAMERA, mCameraCallback,
+                getDisableButtonCallback(ButtonManager.BUTTON_HDR));
     }
 
     @Override

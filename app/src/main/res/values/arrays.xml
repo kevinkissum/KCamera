@@ -11,5 +11,9 @@
     <integer name="camera_mode_capture_intent">6</integer>
 
 
+    <array name="camera_id_icons" translatable="false">
+        <item>@drawable/ic_switch_camera_back</item>
+        <item>@drawable/ic_switch_camera_front</item>
+    </array>
 
 </resources>
