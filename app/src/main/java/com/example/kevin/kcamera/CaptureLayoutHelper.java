@@ -4,7 +4,7 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.util.Log;
 
-public class CaptureLayoutHelper implements PhotoUI.NonDecorWindowSizeChangedListener{
+public class CaptureLayoutHelper implements CameraAppUI.NonDecorWindowSizeChangedListener{
 
     public static final String TAG = "CaptureLayoutHelper";
 

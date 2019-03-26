@@ -8,6 +8,7 @@ import android.util.Size;
 
 import com.example.kevin.kcamera.Interface.ICameraControll;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
+import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 
 import java.util.List;
 
@@ -27,6 +28,13 @@ public class PhotoModule implements ICameraControll{
     public PhotoModule(CameraActivity activity, Handler handler) {
         mCameraControl = new CameraController(activity, handler, this);
         mContext = activity.getApplicationContext();
+        mActivity = activity;
+        init();
+    }
+
+    public void init() {
+        mUI = new PhotoUI(mActivity, mActivity.getModuleLayoutRoot());
+
     }
 
 
@@ -79,15 +87,6 @@ public class PhotoModule implements ICameraControll{
         Log.d(TAG, "Preview size is " + preViewSize);
     }
 
-    @Override
-    public void changePreViewSize(int width, int height) {
-        mPhotoControl.setPreViewSize(width, height);
-    }
-
-    public void setPresenter(IPhotoModuleControll photoControl) {
-        mPhotoControl = photoControl;
-    }
-
     public void takePicture() {
         mCameraControl.startTakePicture();
     }
@@ -107,5 +106,9 @@ public class PhotoModule implements ICameraControll{
 
     public void openCamera() {
         mCameraControl.requestCamera(mCameraId, true);
+    }
+
+    public void setPresenter(IPhotoModuleControll presenter) {
+        mPhotoControl = presenter;
     }
 }

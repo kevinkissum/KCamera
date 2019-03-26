@@ -7,12 +7,12 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
-import com.example.kevin.kcamera.PhotoUI;
+import com.example.kevin.kcamera.CameraAppUI;
 import com.example.kevin.kcamera.Util;
 
 public class MainActivityLayout  extends FrameLayout {
 
-    private PhotoUI.NonDecorWindowSizeChangedListener mNonDecorWindowSizeChangedListener = null;
+    private CameraAppUI.NonDecorWindowSizeChangedListener mNonDecorWindowSizeChangedListener = null;
 
 
     public MainActivityLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
@@ -30,7 +30,7 @@ public class MainActivityLayout  extends FrameLayout {
     }
 
     public void setNonDecorWindowSizeChangedListener(
-            PhotoUI.NonDecorWindowSizeChangedListener listener) {
+            CameraAppUI.NonDecorWindowSizeChangedListener listener) {
         mNonDecorWindowSizeChangedListener = listener;
         if (mNonDecorWindowSizeChangedListener != null) {
             mNonDecorWindowSizeChangedListener.onNonDecorWindowSizeChanged(

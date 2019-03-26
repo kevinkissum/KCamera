@@ -56,11 +56,11 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
         mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
+        mCameraUI = new CameraAppUI(this, mRootView);
         mCurrentModule = new PhotoModule(this, mMainHandler);
-        mPhotoUI = new PhotoUI(this, mRootView);
-        mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mPhotoUI);
+        mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mCameraUI);
         mCurrentModule.setPresenter(mPresenter);
-        mPhotoUI.setPresenter(mPresenter);
+        mCameraUI.setPresenter(mPresenter);
     }
 
     @Override
@@ -96,6 +96,10 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
             mButtonManager = new ButtonManager(this);
         }
         return mButtonManager;
+    }
+
+    public MainActivityLayout getModuleLayoutRoot() {
+        return mRootView;
     }
 
     private static class MainHandler extends Handler {
