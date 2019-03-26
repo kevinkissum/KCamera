@@ -2,6 +2,5 @@
 <resources>
     <declare-styleable name="MultiToggleImageButton">
         <attr name="imageIds" format="reference" />
-        <attr name="contentDescriptionIds" format="reference" />
     </declare-styleable>
 </resources>

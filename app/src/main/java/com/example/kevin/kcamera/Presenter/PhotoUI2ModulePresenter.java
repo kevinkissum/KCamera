@@ -31,6 +31,11 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
     }
 
     @Override
+    public void updatePreviewAspectRatio(float ratio) {
+
+    }
+
+    @Override
     public void onShutterButtonClick() {
         mPhotoModule.takePicture();
     }
@@ -38,5 +43,9 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
     @Override
     public void switchCamera() {
         mPhotoModule.switchCamera();
+    }
+
+    public void OpenCamera() {
+        mPhotoModule.openCamera();
     }
 }

@@ -80,47 +80,6 @@ public class MultiToggleImageButton extends ImageButton {
             return;
         }
 
-//        new AsyncTask<Integer, Void, Bitmap>() {
-//            @Override
-//            protected Bitmap doInBackground(Integer... params) {
-//                return combine(params[0], params[1]);
-//            }
-//
-//            @Override
-//            protected void onPostExecute(Bitmap bitmap) {
-//                if (bitmap == null) {
-//                    setStateInternal(state, callListener);
-//                } else {
-//                    setImageBitmap(bitmap);
-//
-//                    int offset;
-//                    if (mAnimDirection == ANIM_DIRECTION_VERTICAL) {
-//                        offset = (mParentSize+getHeight())/2;
-//                    } else if (mAnimDirection == ANIM_DIRECTION_HORIZONTAL) {
-//                        offset = (mParentSize+getWidth())/2;
-//                    } else {
-//                        return;
-//                    }
-//
-//                    mAnimator.setFloatValues(-offset, 0.0f);
-//                    AnimatorSet s = new AnimatorSet();
-//                    s.play(mAnimator);
-//                    s.addListener(new AnimatorListenerAdapter() {
-//                        @Override
-//                        public void onAnimationStart(Animator animation) {
-//                            setClickEnabled(false);
-//                        }
-//
-//                        @Override
-//                        public void onAnimationEnd(Animator animation) {
-//                            setStateInternal(state, callListener);
-//                            setClickEnabled(true);
-//                        }
-//                    });
-//                    s.start();
-//                }
-//            }
-//        }.execute(mState, state);
     }
 
     private void setStateInternal(int state, boolean callListener) {
@@ -129,17 +88,6 @@ public class MultiToggleImageButton extends ImageButton {
             setImageByState(mState);
         }
 
-//        if (mDescIds != null) {
-//            String oldContentDescription = String.valueOf(getContentDescription());
-//            String newContentDescription = getResources().getString(mDescIds[mState]);
-//            if (oldContentDescription != null && !oldContentDescription.isEmpty()
-//                    && !oldContentDescription.equals(newContentDescription)) {
-//                setContentDescription(newContentDescription);
-//                String announceChange = getResources().getString(
-//                        R.string.button_change_announcement, newContentDescription);
-//                announceForAccessibility(announceChange);
-//            }
-//        }
         super.setImageLevel(mLevel);
 
         if (callListener && mOnStateChangeListener != null) {
@@ -200,23 +148,6 @@ public class MultiToggleImageButton extends ImageButton {
         });
         setScaleType(ImageView.ScaleType.MATRIX);
 
-//        mAnimator = ValueAnimator.ofFloat(0.0f, 0.0f);
-//        mAnimator.setDuration(ANIM_DURATION_MS);
-//        mAnimator.setInterpolator(Gusterpolator.INSTANCE);
-//        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//            @Override
-//            public void onAnimationUpdate(ValueAnimator animation) {
-//                mMatrix.reset();
-//                if (mAnimDirection == ANIM_DIRECTION_VERTICAL) {
-//                    mMatrix.setTranslate(0.0f, (Float) animation.getAnimatedValue());
-//                } else if (mAnimDirection == ANIM_DIRECTION_HORIZONTAL) {
-//                    mMatrix.setTranslate((Float) animation.getAnimatedValue(), 0.0f);
-//                }
-//
-//                setImageMatrix(mMatrix);
-//                invalidate();
-//            }
-//        });
     }
 
     private void nextState() {

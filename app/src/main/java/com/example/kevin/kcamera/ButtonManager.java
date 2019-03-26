@@ -1,6 +1,7 @@
 package com.example.kevin.kcamera;
 
 import android.view.View;
+import android.widget.ImageButton;
 
 import com.example.kevin.kcamera.View.MultiToggleImageButton;
 
@@ -29,6 +30,12 @@ public class ButtonManager implements SettingsManager.OnSettingChangedListener {
     public static final int BUTTON_GRID_LINES = 10;
     public static final int BUTTON_EXPOSURE_COMPENSATION = 11;
     public static final int BUTTON_COUNTDOWN = 12;
+
+    private MultiToggleImageButton mButtonCamera;
+    private MultiToggleImageButton mButtonFlash;
+    private MultiToggleImageButton mButtonHdr;
+    private MultiToggleImageButton mButtonGridlines;
+    private MultiToggleImageButton mButtonCountdown;
 
     @Override
     public void onSettingChanged(SettingsManager settingsManager, String key) {
@@ -94,9 +101,64 @@ public class ButtonManager implements SettingsManager.OnSettingChangedListener {
         }
     }
 
-    private MultiToggleImageButton getButtonOrError(int buttonId) {
-        return null;
+    public void getButtonsReferences(View root) {
+//        mButtonCamera
+//                = (MultiToggleImageButton) root.findViewById(R.id.camera_switch);
+//        mButtonFlash
+//                = (MultiToggleImageButton) root.findViewById(R.id.flash_toggle_button);
+//        mButtonHdr
+//                = (MultiToggleImageButton) root.findViewById(R.id.hdr_plus_toggle_button);
+//        mButtonGridlines
+//                = (MultiToggleImageButton) root.findViewById(R.id.grid_lines_toggle_button);
+
     }
+
+
+    private MultiToggleImageButton getButtonOrError(int buttonId) {
+        switch (buttonId) {
+            case BUTTON_FLASH:
+                if (mButtonFlash == null) {
+                    throw new IllegalStateException("Flash button could not be found.");
+                }
+                return mButtonFlash;
+            case BUTTON_TORCH:
+                if (mButtonFlash == null) {
+                    throw new IllegalStateException("Torch button could not be found.");
+                }
+                return mButtonFlash;
+            case BUTTON_HDR_PLUS_FLASH:
+                if (mButtonFlash == null) {
+                    throw new IllegalStateException("Hdr plus torch button could not be found.");
+                }
+                return mButtonFlash;
+            case BUTTON_CAMERA:
+                if (mButtonCamera == null) {
+                    throw new IllegalStateException("Camera button could not be found.");
+                }
+                return mButtonCamera;
+            case BUTTON_HDR_PLUS:
+                if (mButtonHdr == null) {
+                    throw new IllegalStateException("Hdr plus button could not be found.");
+                }
+                return mButtonHdr;
+            case BUTTON_HDR:
+                if (mButtonHdr == null) {
+                    throw new IllegalStateException("Hdr button could not be found.");
+                }
+                return mButtonHdr;
+            case BUTTON_GRID_LINES:
+                if (mButtonGridlines == null) {
+                    throw new IllegalStateException("Grid lines button could not be found.");
+                }
+                return mButtonGridlines;
+            case BUTTON_COUNTDOWN:
+                if (mButtonCountdown == null) {
+                    throw new IllegalStateException("Countdown button could not be found.");
+                }
+                return mButtonCountdown;
+            default:
+                throw new IllegalArgumentException("button not known by id=" + buttonId);
+        }    }
 
     private void initializeCameraButton(final MultiToggleImageButton button,
                                         final ButtonCallback cb, final ButtonCallback preCb, int resIdImages) {

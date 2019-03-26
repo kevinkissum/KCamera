@@ -13,6 +13,7 @@ import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
+import com.example.kevin.kcamera.View.MultiToggleImageButton;
 import com.example.kevin.kcamera.View.RotateImageView;
 import com.example.kevin.kcamera.View.ShutterButton;
 import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
@@ -25,10 +26,9 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private IPhotoUIStatusListener mPresenter;
     private ShutterButton mShutter;
     private CaptureLayoutHelper mCaptureLayoutHelper;
-    private Context mAppContext;
     private BottomBar mBottomBar;
     private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
-    private RotateImageView mSwitchCamera;
+    private MultiToggleImageButton mSwitchCamera;
     private CameraActivity mActivity;
 
     private final ButtonManager.ButtonCallback mCameraCallback =
@@ -59,7 +59,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     }
 
     private void init() {
-        Resources res = mAppContext.getResources();
+        Resources res = mActivity.getResources();
         mTextureView = (AutoFitTextureView) mRootView.findViewById(R.id.preview_content);
         mTextureView.setSurfaceTextureListener(this);
         mShutter = mRootView.findViewById(R.id.shutter_button);
@@ -75,10 +75,11 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
         mStickyBottomCaptureLayout.setCaptureLayoutHelper(mCaptureLayoutHelper);
         mSwitchCamera = mRootView.findViewById(R.id.camera_switch);
         mSwitchCamera.setOnClickListener(this);
-        ButtonManager buttonManager = mActivity.getButtonManager();
-        buttonManager.initializeButton(
-                ButtonManager.BUTTON_CAMERA, mCameraCallback,
-                getDisableButtonCallback(ButtonManager.BUTTON_HDR));
+//        ButtonManager buttonManager = mActivity.getButtonManager();
+//        buttonManager.getButtonsReferences(mRootView);
+//        buttonManager.initializeButton(
+//                ButtonManager.BUTTON_CAMERA, mCameraCallback,
+//                getDisableButtonCallback(ButtonManager.BUTTON_HDR));
     }
 
     @Override
