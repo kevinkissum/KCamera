@@ -73,8 +73,7 @@ public class PhotoModule implements ICameraControll{
 
         if (currentSize.getWidth() != 0 && currentSize.getHeight() != 0) {
             Log.v(TAG, "updating aspect ratio");
-            mPhotoControl.updatePreviewAspectRatio((float) currentSize.getWidth()
-                    / (float) currentSize.getHeight());
+            mPhotoControl.updatePreviewAspectRatio(currentSize.getHeight(), currentSize.getWidth());
         }
         Log.d(TAG, "PictureSize is " + pictureSize);
         Log.d(TAG, "Preview size is " + preViewSize);

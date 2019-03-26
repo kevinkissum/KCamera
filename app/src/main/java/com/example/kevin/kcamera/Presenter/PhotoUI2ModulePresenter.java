@@ -31,8 +31,8 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
     }
 
     @Override
-    public void updatePreviewAspectRatio(float ratio) {
-
+    public void updatePreviewAspectRatio(int width, int height) {
+        mPhotoUI.setPreViewSize(width, height);
     }
 
     @Override

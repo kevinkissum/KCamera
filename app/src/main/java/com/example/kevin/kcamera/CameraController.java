@@ -279,7 +279,6 @@ public class CameraController extends CameraDevice.StateCallback {
             //配置流， 即setPhotoSize
             mImageReader = ImageReader.newInstance(mPhotoSize.getWidth(), mPhotoSize.getHeight(),
                     ImageFormat.JPEG, /*maxImages*/2);
-            Log.e(TAG, "配置流， 即setPhotoSize: " + mPhotoSize.getWidth() +  " * " + mPhotoSize.getHeight()) ;
             mImageReader.setOnImageAvailableListener(
                     mOnImageAvailableListener, mainHandler);
 
@@ -303,14 +302,6 @@ public class CameraController extends CameraDevice.StateCallback {
                     Log.e(TAG, "Display rotation is invalid: " + displayRotation);
             }
 
-//            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//                mCameraControl.changePreViewSize(
-//                        mPreviewSize.getWidth(), mPreviewSize.getHeight());
-//            } else {
-//                mCameraControl.changePreViewSize(
-//                        mPreviewSize.getHeight(), mPreviewSize.getWidth());
-//            }
-            Log.e(TAG, "   changePreViewSize: " + mPreviewSize.getWidth() +  " * " + mPreviewSize.getHeight()) ;
             // Check if the flash is supported.
             Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
             mFlashSupported = available == null ? false : available;
