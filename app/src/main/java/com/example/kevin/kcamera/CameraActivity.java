@@ -18,6 +18,7 @@ import android.view.Window;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
 import com.example.kevin.kcamera.Interface.AppControll;
+import com.example.kevin.kcamera.View.ModeListView;
 
 import java.lang.ref.WeakReference;
 
@@ -37,6 +38,8 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
     private PhotoUI2ModulePresenter mPresenter;
     private ActionBar mActionBar;
     private ButtonManager mButtonManager;
+    private ModeListView mModeListView;
+    private ModuleManagerImpl mModuleManager;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -61,6 +64,10 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
         mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mCameraUI);
         mCurrentModule.setPresenter(mPresenter);
         mCameraUI.setPresenter(mPresenter);
+        mModeListView = (ModeListView) findViewById(R.id.mode_list_layout);
+        mModuleManager = new ModuleManagerImpl();
+        ModulesInfo.setupModules(mAppContext, mModuleManager);
+        mModeListView.init(mModuleManager.getSupportedModeIndexList());
     }
 
     @Override

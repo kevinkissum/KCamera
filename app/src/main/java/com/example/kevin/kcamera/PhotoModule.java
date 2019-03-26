@@ -6,13 +6,14 @@ import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
 
+import com.example.kevin.kcamera.Abstract.CameraModule;
 import com.example.kevin.kcamera.Interface.ICameraControll;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 
 import java.util.List;
 
-public class PhotoModule implements ICameraControll{
+public class PhotoModule extends CameraModule implements ICameraControll{
 
 
     private static final String TAG = "PhotoModule";
@@ -110,5 +111,45 @@ public class PhotoModule implements ICameraControll{
 
     public void setPresenter(IPhotoModuleControll presenter) {
         mPhotoControl = presenter;
+    }
+
+    @Override
+    public void init(CameraActivity activity, boolean isSecureCamera, boolean isCaptureIntent) {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
+    @Override
+    public void onPreviewVisibilityChanged(int visibility) {
+
+    }
+
+    @Override
+    public void onLayoutOrientationChanged(boolean isLandscape) {
+
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        return false;
+    }
+
+    @Override
+    public void onCameraAvailable() {
+
     }
 }

@@ -22,10 +22,10 @@
         <!--android:layout_height="match_parent"-->
         <!--android:visibility="invisible" />-->
 
-    <!--<com.android.camera.ui.PreviewOverlay-->
-        <!--android:id="@+id/preview_overlay"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent" />-->
+    <com.example.kevin.kcamera.View.PreviewOverlay
+        android:id="@+id/preview_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <!--<com.android.camera.ui.FaceView-->
         <!--android:id="@+id/face_view"-->
@@ -63,7 +63,7 @@
         android:clickable="true" >
     </FrameLayout>
 
-    <!--<include layout="@layout/mode_list_layout" />-->
+    <include layout="@layout/mode_list_layout" />
 
     <include layout="@layout/sticky_bottom_capture_layout" />
 

@@ -16,4 +16,42 @@
         <item>@drawable/ic_switch_camera_front</item>
     </array>
 
+    <integer-array name="camera_modes_in_nav_drawer_if_supported">
+        <item>@integer/camera_mode_photosphere</item>
+        <item>@integer/camera_mode_panorama</item>
+        <item>@integer/camera_mode_refocus</item>
+        <item>@integer/camera_mode_photo</item>
+        <item>@integer/camera_mode_video</item>
+    </integer-array>
+
+    <integer-array name="camera_modes_always_visible">
+        <item>@integer/camera_mode_photo</item>
+    </integer-array>
+
+
+    <array name="camera_mode_theme_color">
+        <item>@color/camera_mode_color</item>
+        <item>@color/video_mode_color</item>
+        <item>@color/refocus_mode_color</item>
+        <item>@color/photosphere_mode_color</item>
+        <item>@color/panorama_mode_color</item>
+        <item>@color/camera_mode_color</item>
+        <item>@color/camera_mode_color</item>
+    </array>
+
+
+    <array name="camera_mode_icon">
+        <item>@drawable/ic_camera_normal</item>
+        <item>@drawable/ic_video_normal</item>
+        <item>@drawable/ic_refocus_normal</item>
+        <item>@drawable/ic_photosphere_normal</item>
+        <item>@drawable/ic_panorama_normal</item>
+        <item>@drawable/ic_camera_normal</item>
+        <item>@drawable/ic_camera_normal</item>
+    </array>
+
+
+
+
+
 </resources>

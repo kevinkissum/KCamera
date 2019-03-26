@@ -39,10 +39,10 @@ public class MainActivityLayout  extends FrameLayout {
         }
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        boolean result = super.dispatchTouchEvent(ev);
-        android.util.Log.d("kk", "  disaptch touch event " + result);
-        return result;
-    }
+//    @Override
+//    public boolean dispatchTouchEvent(MotionEvent ev) {
+//        boolean result = super.dispatchTouchEvent(ev);
+//        android.util.Log.d("kk", "  disaptch touch event " + result);
+//        return result;
+//    }
 }

@@ -15,6 +15,7 @@ public class CaptureLayoutHelper implements CameraAppUI.NonDecorWindowSizeChange
     private float mBottomBarOptimalHeight;
     private float mBottomBarMinHeight;
     private float mBottomBarMaxHeight;
+    private boolean mShowBottomBar = true;
 
     public CaptureLayoutHelper(int bottomBarMinHeight, int bottomBarMaxHeight, int bottomBarOptimalHeight) {
         mBottomBarMinHeight = bottomBarMinHeight;
@@ -202,6 +203,55 @@ public class CaptureLayoutHelper implements CameraAppUI.NonDecorWindowSizeChange
         mRotation = rotation;
         updatePositionConfiguration();
     }
+
+    public RectF getUncoveredPreviewRect() {
+        if (mPositionConfiguration == null) {
+            updatePositionConfiguration();
+        }
+        // Not enough info to create a position configuration.
+        if (mPositionConfiguration == null) {
+            return new RectF();
+        }
+
+        if (!RectF.intersects(mPositionConfiguration.mBottomBarRect,
+                mPositionConfiguration.mPreviewRect) || !mShowBottomBar) {
+            return mPositionConfiguration.mPreviewRect;
+        }
+
+        if (mWindowHeight > mWindowWidth) {
+            // Portrait.
+            if (mRotation >= 180) {
+                // Reverse portrait, bottom bar align top.
+                return new RectF(mPositionConfiguration.mPreviewRect.left,
+                        mPositionConfiguration.mBottomBarRect.bottom,
+                        mPositionConfiguration.mPreviewRect.right,
+                        mPositionConfiguration.mPreviewRect.bottom);
+            } else {
+                return new RectF(mPositionConfiguration.mPreviewRect.left,
+                        mPositionConfiguration.mPreviewRect.top,
+                        mPositionConfiguration.mPreviewRect.right,
+                        mPositionConfiguration.mBottomBarRect.top);
+            }
+        } else {
+            if (mRotation >= 180) {
+                // Reverse landscape, bottom bar align left.
+                return new RectF(mPositionConfiguration.mBottomBarRect.right,
+                        mPositionConfiguration.mPreviewRect.top,
+                        mPositionConfiguration.mPreviewRect.right,
+                        mPositionConfiguration.mPreviewRect.bottom);
+            } else {
+                return new RectF(mPositionConfiguration.mPreviewRect.left,
+                        mPositionConfiguration.mPreviewRect.top,
+                        mPositionConfiguration.mBottomBarRect.left,
+                        mPositionConfiguration.mPreviewRect.bottom);
+            }
+        }
+    }
+
+    public void setShowBottomBar(boolean showBottomBar) {
+        mShowBottomBar = showBottomBar;
+    }
+
 
     public static final class PositionConfiguration {
         /**

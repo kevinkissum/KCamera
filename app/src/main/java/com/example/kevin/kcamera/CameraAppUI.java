@@ -1,8 +1,11 @@
 package com.example.kevin.kcamera;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 
@@ -11,13 +14,25 @@ import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
+import com.example.kevin.kcamera.View.ModeListView;
 import com.example.kevin.kcamera.View.MultiToggleImageButton;
+import com.example.kevin.kcamera.View.PreviewOverlay;
 import com.example.kevin.kcamera.View.ShutterButton;
 import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
 public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener {
 
     private static final String TAG = "CameraAppUI";
+
+    private final static int IDLE = 0;
+    private final static int SWIPE_UP = 1;
+    private final static int SWIPE_DOWN = 2;
+    private final static int SWIPE_LEFT = 3;
+    private final static int SWIPE_RIGHT = 4;
+    private final static int SWIPE_TIME_OUT_MS = 500;
+
+
+    private Context mContext;
     private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
     private IPhotoUIStatusListener mPresenter;
@@ -26,7 +41,13 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     private BottomBar mBottomBar;
     private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
     private MultiToggleImageButton mSwitchCamera;
+    private PreviewOverlay mPreviewOverlay;
     private CameraActivity mActivity;
+    private int mSwipeState;
+    private boolean mSwipeEnabled;
+    private int mSlop;
+    private GestureDetector mGestureDetector;
+    private ModeListView mModeListView;
 
     private final ButtonManager.ButtonCallback mCameraCallback =
             new ButtonManager.ButtonCallback() {
@@ -52,6 +73,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     public CameraAppUI(CameraActivity activity, MainActivityLayout rootView) {
         mRootView = rootView;
         mActivity = activity;
+        mContext = activity.getApplicationContext();
         init();
     }
 
@@ -72,6 +94,11 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
         mStickyBottomCaptureLayout.setCaptureLayoutHelper(mCaptureLayoutHelper);
         mSwitchCamera = mRootView.findViewById(R.id.camera_switch);
         mSwitchCamera.setOnClickListener(this);
+        mGestureDetector = new GestureDetector(mContext, new MyGestureListener());
+        mPreviewOverlay = mRootView.findViewById(R.id.preview_overlay);
+        mPreviewOverlay.GestureDetectorListener(mGestureDetector);
+        mModeListView = mRootView.findViewById(R.id.mode_list_layout);
+        mModeListView.setCaptureLayoutHelper(mCaptureLayoutHelper);
 
     }
 
@@ -130,5 +157,63 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     public interface NonDecorWindowSizeChangedListener {
         public void onNonDecorWindowSizeChanged(int width, int height, int rotation);
     }
+
+    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private MotionEvent mDown;
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent ev, float distanceX, float distanceY) {
+//            if (ev.getEventTime() - ev.getDownTime() > SWIPE_TIME_OUT_MS
+//                    || mSwipeState != IDLE
+//                    || !mSwipeEnabled) {
+//                return false;
+//            }
+
+            int deltaX = (int) (ev.getX() - mDown.getX());
+            int deltaY = (int) (ev.getY() - mDown.getY());
+            if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                if (Math.abs(deltaX) > mSlop || Math.abs(deltaY) > mSlop) {
+                    // Calculate the direction of the swipe.
+                    if (deltaX >= Math.abs(deltaY)) {
+                        // Swipe right.
+                        setSwipeState(SWIPE_RIGHT);
+                    } else if (deltaX <= -Math.abs(deltaY)) {
+                        // Swipe left.
+                        setSwipeState(SWIPE_LEFT);
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void setSwipeState(int swipeState) {
+            mSwipeState = swipeState;
+            // Notify new swipe detected.
+            onSwipeDetected(swipeState);
+        }
+
+        @Override
+        public boolean onDown(MotionEvent ev) {
+            Log.d("kk", " app ui down ");
+            mDown = MotionEvent.obtain(ev);
+            mSwipeState = IDLE;
+            return false;
+        }
+    }
+
+    private void onSwipeDetected(int swipeState) {
+        if (swipeState == SWIPE_UP || swipeState == SWIPE_DOWN) {
+            Log.d("kk", " app ui swipeState  " +  swipeState);
+        } else if (swipeState == SWIPE_LEFT) {
+            Log.d("kk", " app ui SWIPE_LEFT  ");
+            // Pass the touch sequence to filmstrip layout.
+//            mAppRootView.redirectTouchEventsTo(mFilmstripLayout);
+        } else if (swipeState == SWIPE_RIGHT) {
+            Log.d("kk", " app ui SWIPE_RIGHT  ");
+            // Pass the touch to mode switcher
+//            mAppRootView.redirectTouchEventsTo(mModeListView);
+        }
+    }
+
 
 }

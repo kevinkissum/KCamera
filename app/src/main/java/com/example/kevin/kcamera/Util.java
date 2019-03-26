@@ -2,6 +2,7 @@ package com.example.kevin.kcamera;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -21,11 +22,12 @@ import java.util.List;
 
 public class Util {
 
+    private static final String TAG = "Util";
+
     private static final double ASPECT_RATIO_TOLERANCE = 0.05;
     public static final Rational ASPECT_RATIO_16x9 = new Rational(16, 9);
     public static final Rational ASPECT_RATIO_4x3 = new Rational(4, 3);
     private static final int DEFAULT_CAPTURE_PIXELS = 1920 * 1080;
-
 
     public static void showToast(final Activity activity, final String text) {
         if (activity != null) {
@@ -155,4 +157,31 @@ public class Util {
         return Math.abs(ar1.doubleValue() - ar2.doubleValue()) < ASPECT_RATIO_TOLERANCE;
     }
 
+    public static int getCameraThemeColorId(int modeIndex, Context context) {
+        TypedArray colorRes = context.getResources()
+                .obtainTypedArray(R.array.camera_mode_theme_color);
+        if (modeIndex >= colorRes.length() || modeIndex < 0) {
+            // Mode index not found
+            Log.e(TAG, "Invalid mode index: " + modeIndex);
+            return 0;
+        }
+        return colorRes.getResourceId(modeIndex, 0);    }
+
+    public static int getCameraModeIconResId(int modeIndex, Context context) {
+        TypedArray cameraModesIcons = context.getResources()
+                .obtainTypedArray(R.array.camera_mode_icon);
+        if (modeIndex >= cameraModesIcons.length() || modeIndex < 0) {
+            // Mode index not found
+            Log.e(TAG, "Invalid mode index: " + modeIndex);
+            return 0;
+        }
+        return cameraModesIcons.getResourceId(modeIndex, 0);    }
+
+    public static CharSequence getCameraModeText(int modeId, Context context) {
+        return null;
+    }
+
+    public static CharSequence getCameraModeContentDescription(int modeId, Context context) {
+        return null;
+    }
 }
