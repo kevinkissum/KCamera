@@ -12,20 +12,21 @@
         android:layout_height="match_parent" />
 
     <!--<com.android.camera.ui.focus.FocusRingView-->
-        <!--android:id="@+id/focus_ring"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent" />-->
+    <!--android:id="@+id/focus_ring"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent" />-->
 
     <!--<com.android.camera.ui.CaptureAnimationOverlay-->
-        <!--android:id="@+id/capture_overlay"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:visibility="invisible" />-->
+    <!--android:id="@+id/capture_overlay"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:visibility="invisible" />-->
 
     <com.example.kevin.kcamera.View.PreviewOverlay
         android:id="@+id/preview_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 
     <!--<com.android.camera.ui.FaceView-->
         <!--android:id="@+id/face_view"-->

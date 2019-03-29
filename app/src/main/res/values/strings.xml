@@ -3,4 +3,24 @@
     <string name="camera_error_title">Camera Error</string>
     <string name="error_permissions">error permissions</string>
     <string name="dialog_dismiss">dismiss</string>
+
+    <!-- Camera settings. [CHAR LIMIT=25] -->
+    <string name="mode_settings">Settings</string>
+    <!-- Text shown in the camera mode options list for normal camera mode [CHAR LIMIT=25] -->
+    <string name="mode_camera">Camera</string>
+    <!-- Text shown in the camera mode options list for putting camera in video recording mode [CHAR LIMIT=25] -->
+    <string name="mode_video">Video</string>
+    <!-- Text shown in the camera mode options list for putting camera in photo sphere mode. 'Photo sphere' is a product name. [CHAR LIMIT=25] -->
+    <string name="mode_photosphere">Photo Sphere</string>
+    <!-- Text shown in the camera mode options list for putting camera in time lapse mode [CHAR LIMIT=25] -->
+    <string name="mode_timelapse">Time Lapse</string>
+    <!-- Text shown in the camera mode options list for putting camera in wide angle panorama mode [CHAR LIMIT=25] -->
+    <string name="mode_wideangle">Wide Angle</string>
+    <!-- Text shown in the camera mode options list for putting camera in panorama mode [CHAR LIMIT=25] -->
+    <string name="mode_panorama">Panorama</string>
+    <!-- Text shown in the camera mode options list for putting camera in refocus mode [CHAR LIMIT=25] -->
+    <string name="mode_refocus">Lens Blur</string>
+
+
+
 </resources>

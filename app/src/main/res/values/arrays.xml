@@ -51,6 +51,26 @@
     </array>
 
 
+    <string-array name="camera_mode_text">
+        <item>@string/mode_camera</item>
+        <item>@string/mode_video</item>
+        <item>@string/mode_refocus</item>
+        <item>@string/mode_photosphere</item>
+        <item>@string/mode_panorama</item>
+        <item>""</item>
+        <item>""</item>
+    </string-array>
+
+
+
+
+
+
+
+
+
+
+
 
 
 

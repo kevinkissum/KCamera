@@ -20,7 +20,7 @@ import com.example.kevin.kcamera.View.PreviewOverlay;
 import com.example.kevin.kcamera.View.ShutterButton;
 import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
-public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener {
+public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener, ModeListView.ModeListOpenListener {
 
     private static final String TAG = "CameraAppUI";
 
@@ -99,6 +99,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
         mPreviewOverlay.GestureDetectorListener(mGestureDetector);
         mModeListView = mRootView.findViewById(R.id.mode_list_layout);
         mModeListView.setCaptureLayoutHelper(mCaptureLayoutHelper);
+        mModeListView.setModeListOpenListener(this);
 
     }
 
@@ -154,10 +155,35 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
         }
     }
 
+    @Override
+    public void onOpenFullScreen() {
+
+    }
+
+    @Override
+    public void onModeListOpenProgress(float progress) {
+
+    }
+
+    @Override
+    public void onModeListClosed() {
+
+    }
+
+    public void onResume() {
+        showShimmyDelayed();
+    }
+
+    private void showShimmyDelayed() {
+        // 隐藏modeListView
+        mModeListView.showModeSwitcherHint();
+    }
+
     public interface NonDecorWindowSizeChangedListener {
         public void onNonDecorWindowSizeChanged(int width, int height, int rotation);
     }
 
+    // 测试发现该GestureListener不需要， Mainlayout将事件拦截， 并在其TouchEvent中调用modelistView的onTouchEvent
     private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
         private MotionEvent mDown;
 
@@ -168,7 +194,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
 //                    || !mSwipeEnabled) {
 //                return false;
 //            }
-
+            Log.d("kk", " app ui MyGestureListener onScroll ");
             int deltaX = (int) (ev.getX() - mDown.getX());
             int deltaY = (int) (ev.getY() - mDown.getY());
             if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
@@ -177,8 +203,10 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
                     if (deltaX >= Math.abs(deltaY)) {
                         // Swipe right.
                         setSwipeState(SWIPE_RIGHT);
+                        Log.d("kk", " app ui SWIPE_RIGHT ");
                     } else if (deltaX <= -Math.abs(deltaY)) {
                         // Swipe left.
+                        Log.d("kk", " app ui SWIPE_LEFT ");
                         setSwipeState(SWIPE_LEFT);
                     }
                 }
@@ -194,24 +222,23 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
 
         @Override
         public boolean onDown(MotionEvent ev) {
-            Log.d("kk", " app ui down ");
+            Log.d("kk", " app ui MyGestureListener onDown ");
             mDown = MotionEvent.obtain(ev);
             mSwipeState = IDLE;
             return false;
         }
+
+
     }
 
     private void onSwipeDetected(int swipeState) {
         if (swipeState == SWIPE_UP || swipeState == SWIPE_DOWN) {
-            Log.d("kk", " app ui swipeState  " +  swipeState);
         } else if (swipeState == SWIPE_LEFT) {
-            Log.d("kk", " app ui SWIPE_LEFT  ");
             // Pass the touch sequence to filmstrip layout.
 //            mAppRootView.redirectTouchEventsTo(mFilmstripLayout);
         } else if (swipeState == SWIPE_RIGHT) {
-            Log.d("kk", " app ui SWIPE_RIGHT  ");
             // Pass the touch to mode switcher
-//            mAppRootView.redirectTouchEventsTo(mModeListView);
+            mRootView.redirectTouchEventsTo(mModeListView);
         }
     }
 

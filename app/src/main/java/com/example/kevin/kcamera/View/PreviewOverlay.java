@@ -3,6 +3,7 @@ package com.example.kevin.kcamera.View;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,9 +22,10 @@ public class PreviewOverlay extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (mGestureDetector != null) {
-            mGestureDetector.onTouchEvent(event);
-        }
+        Log.d("kk", " PreviewOverlay  onTouchEvent  "  + mGestureDetector);
+//        if (mGestureDetector != null) {
+//            mGestureDetector.onTouchEvent(event);
+//        }
         return true;
     }
 }

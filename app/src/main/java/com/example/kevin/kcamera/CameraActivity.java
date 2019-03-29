@@ -40,6 +40,7 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
     private ButtonManager mButtonManager;
     private ModeListView mModeListView;
     private ModuleManagerImpl mModuleManager;
+    private boolean mModeListVisible;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -68,11 +69,13 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
         mModuleManager = new ModuleManagerImpl();
         ModulesInfo.setupModules(mAppContext, mModuleManager);
         mModeListView.init(mModuleManager.getSupportedModeIndexList());
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        mCameraUI.onResume();
 
     }
 

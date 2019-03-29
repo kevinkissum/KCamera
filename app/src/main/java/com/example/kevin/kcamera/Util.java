@@ -177,11 +177,14 @@ public class Util {
         }
         return cameraModesIcons.getResourceId(modeIndex, 0);    }
 
-    public static CharSequence getCameraModeText(int modeId, Context context) {
-        return null;
-    }
+    public static CharSequence getCameraModeText(int modeIndex, Context context) {
+        String[] cameraModesText = context.getResources()
+                .getStringArray(R.array.camera_mode_text);
+        if (modeIndex < 0 || modeIndex >= cameraModesText.length) {
+            Log.e(TAG, "Invalid mode index: " + modeIndex);
+            return new String();
+        }
+        return cameraModesText[modeIndex];    }
 
-    public static CharSequence getCameraModeContentDescription(int modeId, Context context) {
-        return null;
-    }
+
 }

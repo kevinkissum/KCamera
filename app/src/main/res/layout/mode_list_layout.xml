@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:layoutDirection="ltr"
     android:background="@null"
-    android:visibility="visible" >
+    android:visibility="invisible" >
     <LinearLayout
         android:id="@+id/mode_list"
         android:orientation="vertical"
