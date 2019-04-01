@@ -57,11 +57,11 @@ public class MainActivityLayout  extends FrameLayout {
     }
 
     /**
-     * 点击屏幕， activity只会将事件传递给该view的ViewGroup，
-     * 其它的View是无法拿到事件的，
+     * 点击屏幕， activity只会将事件传递给该view的ViewGroup，其它的View是无法拿到事件的.
      * 通过将PreviewOverlay设置成很小的区域可以发现，由于点击的地方是TextureView，
      * TextureView不会处理Touch事件， down事件都不处理， 导致后面的Touch事件均不会处理.
-     * 所以PreviewOverlay需要将Touch事件接手。
+     * 所以PreviewOverlay需要将Touch事件接手. 同理，如果在PreviewOverlay中onTouch中down没有返回true，
+     * 之后move事件也不会进行传递。MainLayoutView中接受到down事件！！！
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -117,7 +117,7 @@ public class MainActivityLayout  extends FrameLayout {
             if (/*mIsCaptureIntent ||*/ !mSwipeEnabled) {
                 return false;
             }
-            Log.d("kk", " Main onInterceptTouchEvent >>>>>>>>>>>>>>. " + ev.getAction());
+            Log.d("kk", " Main onInterceptTouchEvent >>>>>>>>>>>>>>.mModeList  " + ev.getAction());
             int deltaX = (int) (ev.getX() - mDown.getX());
             int deltaY = (int) (ev.getY() - mDown.getY());
             if (ev.getActionMasked() == MotionEvent.ACTION_MOVE
