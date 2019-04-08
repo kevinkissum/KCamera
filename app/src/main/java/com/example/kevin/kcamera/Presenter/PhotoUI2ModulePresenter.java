@@ -38,6 +38,7 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
 
     @Override
     public void onShutterButtonClick() {
+        Log.d("kk", " onShutterButtionClick ");
         mPhotoModule.takePicture();
     }
 

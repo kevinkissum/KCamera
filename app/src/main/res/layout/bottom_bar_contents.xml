@@ -39,10 +39,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:scaleType="center"
+                android:scaleX="0.7"
+                android:scaleY="0.7"
                 android:clickable="true"
                 android:focusable="true"
-                android:src="@drawable/ic_camera" />
+                android:src="@drawable/bn_camera_capture_selector" />
         </FrameLayout>
 
         <FrameLayout

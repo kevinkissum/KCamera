@@ -10,8 +10,7 @@
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:background="#201ac000" >
+        android:gravity="center">
 
         <include layout="@layout/bottom_bar_contents" />
 

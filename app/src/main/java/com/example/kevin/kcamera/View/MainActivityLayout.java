@@ -89,7 +89,6 @@ public class MainActivityLayout  extends FrameLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.d("kk", " Main onInterceptTouchEvent " + ev.getAction());
         // ViewGroup 传给子View的事情均会在此进行判断
         // 调试发现， 当持续move的时候， move事件会跳过判断，直接走TouchEvent
         if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
@@ -117,7 +116,6 @@ public class MainActivityLayout  extends FrameLayout {
             if (/*mIsCaptureIntent ||*/ !mSwipeEnabled) {
                 return false;
             }
-            Log.d("kk", " Main onInterceptTouchEvent >>>>>>>>>>>>>>.mModeList  " + ev.getAction());
             int deltaX = (int) (ev.getX() - mDown.getX());
             int deltaY = (int) (ev.getY() - mDown.getY());
             if (ev.getActionMasked() == MotionEvent.ACTION_MOVE
