@@ -1,6 +1,7 @@
 package com.example.kevin.kcamera;
 
 import com.example.kevin.kcamera.Abstract.CameraModule;
+import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Interface.ModuleController;
 
 class VideoModule extends CameraModule {
@@ -44,7 +45,7 @@ class VideoModule extends CameraModule {
     }
 
     @Override
-    public void onCameraAvailable() {
+    public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy) {
 
     }
 }

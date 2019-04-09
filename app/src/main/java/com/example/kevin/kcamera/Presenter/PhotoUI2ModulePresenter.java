@@ -22,7 +22,7 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
 
     @Override
     public void onPreviewUIReady(SurfaceTexture surface, int width, int height) {
-        mPhotoModule.openCamera(surface, width, height);
+//        mPhotoModule.requestCameraOpen(surface, width, height);
     }
 
     @Override
@@ -46,7 +46,4 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
         mPhotoModule.switchCamera();
     }
 
-    public void OpenCamera() {
-        mPhotoModule.openCamera();
-    }
 }

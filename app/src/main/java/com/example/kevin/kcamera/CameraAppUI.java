@@ -49,6 +49,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     private GestureDetector mGestureDetector;
     private ModeListView mModeListView;
     private boolean mDisableAllUserInteractions;
+    private SurfaceTexture mSurface;
 
     private final ButtonManager.ButtonCallback mCameraCallback =
             new ButtonManager.ButtonCallback() {
@@ -106,6 +107,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        mSurface = surface;
         mPresenter.onPreviewUIReady(surface, width, height);
     }
 
@@ -207,6 +209,10 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
                 }
             });
         }
+    }
+
+    public SurfaceTexture getSurfaceTexture() {
+        return mSurface;
     }
 
     public interface NonDecorWindowSizeChangedListener {

@@ -11,4 +11,6 @@ public interface AppController {
     public boolean isShutterEnabled();
 
     void setShutterEnabled(boolean enabled);
+
+    void onPreviewStarted();
 }

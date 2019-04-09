@@ -5,6 +5,7 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.camera2.CameraDevice;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
@@ -14,8 +15,11 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.Window;
 
+import com.example.kevin.kcamera.Ex.AndroidCamera2AgentImpl;
+import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Interface.OnStorageUpdateDoneListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -25,7 +29,7 @@ import com.example.kevin.kcamera.View.ModeListView;
 import java.lang.ref.WeakReference;
 
 
-public class CameraActivity extends AppCompatActivity implements AppController {
+public class CameraActivity extends AppCompatActivity implements AppController, CameraAgent.CameraOpenCallback {
 
     public static final String TAG = "CAM_CamActivity";
 
@@ -67,6 +71,8 @@ public class CameraActivity extends AppCompatActivity implements AppController {
     private boolean mIsActivityRunning;
     private boolean mPaused;
     private OnScreenHint mStorageHint;
+    private CameraController mCameraControl;
+    private int mCurrentModeIndex;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -78,6 +84,7 @@ public class CameraActivity extends AppCompatActivity implements AppController {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_camera);
         getSupportActionBar().hide();
+        mCameraControl = new CameraController(this, new AndroidCamera2AgentImpl(getApplicationContext()), mMainHandler, this);
         init();
      }
 
@@ -108,6 +115,7 @@ public class CameraActivity extends AppCompatActivity implements AppController {
     protected void onResume() {
         super.onResume();
         mCameraAppUI.onResume();
+        mCurrentModule.resume();
         updateStorageSpaceAndHint(null);
     }
 
@@ -148,6 +156,11 @@ public class CameraActivity extends AppCompatActivity implements AppController {
     @Override
     public void setShutterEnabled(boolean enabled) {
         mCameraAppUI.setShutterButtonEnabled(enabled);
+    }
+
+    @Override
+    public void onPreviewStarted() {
+
     }
 
     public MainActivityLayout getModuleLayoutRoot() {
@@ -232,6 +245,67 @@ public class CameraActivity extends AppCompatActivity implements AppController {
             // Re-enable all user interactions.
             mCameraAppUI.setDisableAllUserInteractions(false);
         }
+    }
+
+    @Override
+    public void onCameraOpened(CameraAgent.CameraProxy camera) {
+        Log.v(TAG, "onCameraOpened");
+        if (mPaused) {
+            // We've paused, but just asynchronously opened the camera. Close it
+            // because we should be releasing the camera when paused to allow
+            // other apps to access it.
+            Log.v(TAG, "received onCameraOpened but activity is paused, closing Camera");
+            mCameraController.closeCamera(false);
+            return;
+        }
+
+        if (!mModuleManager.getModuleAgent(mCurrentModeIndex).requestAppForCamera()) {
+            // We shouldn't be here. Just close the camera and leave.
+            mCameraController.closeCamera(false);
+            throw new IllegalStateException("Camera opened but the module shouldn't be " +
+                    "requesting");
+        }
+        if (mCurrentModule != null) {
+//            resetExposureCompensationToDefault(camera);
+            try {
+                mCurrentModule.onCameraAvailable(camera);
+            } catch (RuntimeException ex) {
+                Log.e(TAG, "Error connecting to camera", ex);
+//                mFatalErrorHandler.onCameraOpenFailure();
+            }
+        } else {
+            Log.v(TAG, "mCurrentModule null, not invoking onCameraAvailable");
+        }
+        Log.v(TAG, "invoking onChangeCamera");
+//        mCameraAppUI.onChangeCamera();
+    }
+
+    @Override
+    public void onCameraDisabled(int cameraId) {
+
+    }
+
+    @Override
+    public void onDeviceOpenFailure(int cameraId, String info) {
+
+    }
+
+    @Override
+    public void onDeviceOpenedAlready(int cameraId, String info) {
+
+    }
+
+    @Override
+    public void onReconnectionFailure(CameraAgent mgr, String info) {
+
+    }
+
+    public CameraController getCameraProvider() {
+        return mCameraController;
+    }
+
+    public CameraAppUI getCameraAppUI() {
+        return mCameraAppUI;
     }
 
     private static class MainHandler extends Handler {

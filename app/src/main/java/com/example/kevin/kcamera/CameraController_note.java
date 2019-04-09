@@ -23,25 +23,24 @@ import android.view.Surface;
 import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
 import com.example.kevin.kcamera.Ex.CameraAgent;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static com.example.kevin.kcamera.CameraStates.STATE_PREVIEW;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_PRECAPTURE;
 
-public class CameraController implements CameraAgent.CameraOpenCallback {
+public class CameraController_note implements CameraAgent.CameraOpenCallback {
 
     public static final String TAG = "CameraController";
-
-    private static final int EMPTY_REQUEST = -1;
 
     private final Handler mainHandler;
     private int mRequestingCameraId = -1;
     private CameraManager mCameraManager;
     private CameraAgent mCameraAgent;
 
-    private CameraAgent.CameraOpenCallback mCallbackReceiver;
-    private CameraAgent.CameraProxy mCameraProxy;
+    private CameraAgent.CameraOpenCallback mCameraControl;
+    private CameraDevice mCameraDevice;
     private SurfaceTexture mPreviewTexture;
     private AndroidCamera2Settings mCameraSetting;
     private ImageReader mImageReader;
@@ -160,12 +159,12 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
     private void captureStillPicture() {
         try {
             final Activity activity = mActivity;
-            if (null == activity || null == mCameraProxy) {
+            if (null == activity || null == mCameraDevice) {
                 return;
             }
             // This is the CaptureRequest.Builder that we use to take a picture.
             final CaptureRequest.Builder captureBuilder =
-                    mCameraProxy.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(mImageReader.getSurface());
 
             // Use the same AE and AF modes as the preview.
@@ -215,11 +214,11 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
         }
     }
 
-    public CameraController(CameraActivity activity, CameraAgent cameraAgent, Handler handler, CameraAgent.CameraOpenCallback receiver) {
+    public CameraController_note(CameraActivity activity, CameraAgent cameraAgent, Handler handler, CameraAgent.CameraOpenCallback receiver) {
         mActivity = activity;
         mCameraManager = (CameraManager)mActivity.getSystemService(Context.CAMERA_SERVICE);
         mainHandler = handler;
-        mCallbackReceiver = receiver;
+        mCameraControl = receiver;
         mCameraAgent = cameraAgent;
     }
 
@@ -234,7 +233,7 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
             return;
         }
         mRequestingCameraId = id;
-        if (mCameraProxy == null) {
+        if (mCameraDevice == null) {
             checkAndOpenCamera(mCameraAgent, id, mainHandler, this);
         } /*else if (mCameraProxy.getCameraId() != id) {
             Log.d(TAG, "different camera already opened, closing then reopening");
@@ -343,8 +342,8 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
             // TEMPLATE_PREVIEW 创建一个适合于相机预览窗口的请求。
             // TEMPLATE_STILL_CAPTURE 创建适用于静态图像捕获的请求
             // TEMPLATE_VIDEO_SNAPSHOT  在录制视频时创建适合静态图像捕获的请求。
-//            mPreviewRequestBuilder
-//                    = mCameraProxy.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewRequestBuilder
+                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
 
             // Here, we create a CameraCaptureSession for camera preview.
@@ -358,15 +357,15 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
             // MediaCodec
             // MediaRecorder
             // AllocationF
-           /* mCameraProxy.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
+            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
                         // StateCallback
                         // 创建Session创建成功之后回调， 如果有request submit则之后回调onActive， 反之回调onReady
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed
-                            if (null == mCameraProxy) {
-                                Log.e("kk", " configure mCameraProxy " + mCameraProxy);
+                            if (null == mCameraDevice) {
+                                Log.e("kk", " configure mCameraDevice " + mCameraDevice);
                                 return;
                             }
 
@@ -404,10 +403,10 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
                             CameraUtil.showToast(mActivity,"onConfigureFailed Failed");
                         }
                     }, null
-            );*/
-        } catch (Exception e) {
+            );
+        } catch (CameraAccessException e) {
             e.printStackTrace();
-            Log.e("kk", " Exception " + e);
+            Log.e("kk", " CameraAccessException " + e);
         }
     }
 
@@ -454,14 +453,9 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
 
     @Override
     public void onCameraOpened(CameraAgent.CameraProxy camera) {
-        Log.v(TAG, "onCameraOpened");
-        if (mRequestingCameraId != camera.getCameraId()) {
-            return;
-        }
-        mCameraProxy = camera;
-        mRequestingCameraId = EMPTY_REQUEST;
-        if (mCallbackReceiver != null) {
-            mCallbackReceiver.onCameraOpened(camera);
+//        mCameraDevice = camera;
+        if (mCameraControl != null) {
+            mCameraControl.onCameraOpened(camera);
         }
     }
 
@@ -491,14 +485,14 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
         mSurfaceHeight = height;
     }
 
-    public void closeCamera(boolean synced) {
+    public void closeCamera() {
         if (null != mCaptureSession) {
             mCaptureSession.close();
             mCaptureSession = null;
         }
-        if (null != mCameraProxy) {
-//            mCameraProxy.close();
-            mCameraProxy = null;
+        if (null != mCameraDevice) {
+            mCameraDevice.close();
+            mCameraDevice = null;
         }
         if (null != mImageReader) {
             mImageReader.close();
@@ -507,8 +501,8 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
     }
 
     public AndroidCamera2Settings getCameraSettings() {
-        return new AndroidCamera2Settings(mCameraProxy, CameraDevice.TEMPLATE_PREVIEW,
-                mPreviewSize, mPhotoSize);
+        return /*new AndroidCamera2Settings(mCameraDevice, CameraDevice.TEMPLATE_PREVIEW,
+                mPreviewSize, mPhotoSize)*/null;
     }
 
     public void startPreview() {

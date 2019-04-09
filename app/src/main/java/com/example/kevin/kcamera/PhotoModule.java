@@ -3,23 +3,26 @@ package com.example.kevin.kcamera;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 
 import com.example.kevin.kcamera.Abstract.CameraModule;
 import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
+import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Ex.CameraCapabilities;
 import com.example.kevin.kcamera.Interface.AppController;
-import com.example.kevin.kcamera.Interface.ICameraControll;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.PhotoController;
 
-public class PhotoModule extends CameraModule implements ICameraControll, PhotoController {
+import java.lang.ref.WeakReference;
+
+public class PhotoModule extends CameraModule implements PhotoController {
 
 
     private static final String TAG = "PhotoModule";
-    private CameraController mCameraControl;
     private CameraActivity mActivity;
     private Context mContext;
     private PhotoUI mUI;
@@ -34,10 +37,18 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
     private boolean mIsImageCaptureIntent;
     private boolean mSnapshotOnIdle;
     private CameraCapabilities.SceneMode mSceneMode;
+    private CameraAgent.CameraProxy mCameraProxy;
+    private final Handler mHandler = new MainHandler(this);
 
+
+    private final Runnable mDoSnapRunnable = new Runnable() {
+        @Override
+        public void run() {
+            onShutterButtonClick();
+        }
+    };
 
     public PhotoModule(CameraActivity activity, Handler handler) {
-        mCameraControl = new CameraController(activity, handler, this);
         mContext = activity.getApplicationContext();
         mActivity = activity;
         mAppController = activity;
@@ -57,36 +68,94 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
                 || CameraActivity.ACTION_IMAGE_CAPTURE_SECURE.equals(action));
     }
 
-    public void openCamera(SurfaceTexture surface, int width, int height) {
+    public void requestCameraOpen(SurfaceTexture surface, int width, int height) {
         mCameraControl.setSurfaceTexture(surface, width, height);
         mCameraControl.requestCamera(mCameraId, true);
     }
 
-
-    @Override
-    public void onCameraOpened() {
-        Log.d(TAG, "onCameraAvailable");
-        if (mPaused) {
-            return;
-        }
-        if (mCameraSettings == null) {
-            mCameraSettings = mCameraControl.getCameraSettings();
-        }
-        startPreview();
-
+    private void requestCameraOpen() {
+        Log.v(TAG, "requestCameraOpen");
+        mActivity.getCameraProvider().requestCamera(mCameraId, true);
     }
 
     public void startPreview() {
-        updateSettingAfterOpencamera();
-        mCameraControl.startPreview();
+        if (mCameraProxy == null) {
+            Log.i(TAG, "attempted to start preview before camera device");
+            // do nothing
+            return;
+        }
+
+        if (!checkPreviewPreconditions()) {
+            return;
+        }
+
+        updateParametersPictureSize();
+
+        mCameraProxy.setPreviewTexture(mActivity.getCameraAppUI().getSurfaceTexture());
+
+        Log.i(TAG, "startPreview");
+
+        CameraAgent.CameraStartPreviewCallback startPreviewCallback =
+                new CameraAgent.CameraStartPreviewCallback() {
+                    @Override
+                    public void onPreviewStarted() {
+//                        mFocusManager.onPreviewStarted();
+                        PhotoModule.this.onPreviewStarted();
+                        if (mSnapshotOnIdle) {
+                            mHandler.post(mDoSnapRunnable);
+                        }
+                    }
+                };
+//        if (GservicesHelper.useCamera2ApiThroughPortabilityLayer(mActivity.getContentResolver())) {
+            mCameraProxy.startPreview();
+            startPreviewCallback.onPreviewStarted();
+//        } else {
+//            mCameraDevice.startPreviewWithCallback(new Handler(Looper.getMainLooper()),
+//                    startPreviewCallback);
+//        }
+        /*mCameraControl.startPreview();*/
     }
 
-    private void updateSettingAfterOpencamera() {
-        updateParametersPictureSize();
+    private void onPreviewStarted() {
+        mAppController.onPreviewStarted();
+        mAppController.setShutterEnabled(true);
+        setCameraState(IDLE);
+//        startFaceDetection();
+    }
+
+    private void setCameraState(int idle) {
+
+    }
+
+
+    /**
+     * Returns whether we can/should start the preview or not.
+     */
+    private boolean checkPreviewPreconditions() {
+        if (mPaused) {
+            return false;
+        }
+
+        if (mCameraProxy == null) {
+            Log.w(TAG, "startPreview: camera device not ready yet.");
+            return false;
+        }
+
+//        SurfaceTexture st = mActivity.getCameraAppUI().getSurfaceTexture();
+//        if (st == null) {
+//            Log.w(TAG, "startPreview: surfaceTexture is not ready.");
+//            return false;
+//        }
+//
+//        if (!mCameraPreviewParamsReady) {
+//            Log.w(TAG, "startPreview: parameters for preview is not ready.");
+//            return false;
+//        }
+        return true;
     }
 
     private void updateParametersPictureSize() {
-        if (mCameraControl == null) {
+        if (mCameraProxy == null) {
             Log.w(TAG, "attempting to set picture size without caemra device");
             return;
         }
@@ -95,7 +164,7 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
         Size preViewSize = CameraUtil.getBestPreViewSize(mContext, mCameraId);
         mCameraSettings.setPhotoSize(pictureSize);
         mCameraSettings.setPreviewSize(preViewSize);
-        mCameraControl.applySettings(mCameraSettings);
+//        mCameraProxy.applySettings(mCameraSettings);
         Size currentSize = mCameraSettings.getCurrentPreviewSize();
 
         if (currentSize.getWidth() != 0 && currentSize.getHeight() != 0) {
@@ -136,7 +205,7 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
             focusAndCapture();
 //        }
 
-        mCameraControl.startTakePicture();
+        /*mCameraControl.startTakePicture();*/
     }
 
     private void focusAndCapture() {
@@ -163,15 +232,13 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
         closeCamera();
         mCameraId ^= 1;
         mCameraControl.requestCamera(mCameraId, true);
+        requestCameraOpen();
     }
 
     private void closeCamera() {
         mCameraControl.closeCamera();
     }
 
-    public void openCamera() {
-        mCameraControl.requestCamera(mCameraId, true);
-    }
 
     public void setPresenter(IPhotoModuleControll presenter) {
         mPhotoControl = presenter;
@@ -184,6 +251,8 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
 
     @Override
     public void resume() {
+        mPaused = false;
+        requestCameraOpen();
 
     }
 
@@ -213,7 +282,91 @@ public class PhotoModule extends CameraModule implements ICameraControll, PhotoC
     }
 
     @Override
-    public void onCameraAvailable() {
+    public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy) {
+        Log.i(TAG, "onCameraAvailable");
+        if (mPaused) {
+            return;
+        }
+        mCameraProxy = cameraProxy;
+        startPreview();
+//        onCameraOpened();
 
+    }
+
+    // Snapshots can only be taken after this is called. It should be called
+    // once only. We could have done these things in onCreate() but we want to
+    // make preview screen appear as soon as possible.
+    private void initializeFirstTime() {
+//        if (mFirstTimeInitialized || mPaused) {
+//            return;
+//        }
+//
+//        mUI.initializeFirstTime();
+//
+//        // We set the listener only when both service and shutterbutton
+//        // are initialized.
+//        getServices().getMemoryManager().addListener(this);
+//
+//        mNamedImages = new NamedImages();
+//
+//        mFirstTimeInitialized = true;
+//        addIdleHandler();
+//
+//        mActivity.updateStorageSpaceAndHint(null);
+    }
+
+    // If the Camera is idle, update the parameters immediately, otherwise
+    // accumulate them in mUpdateSet and update later.
+    private void setCameraParametersWhenIdle(int additionalUpdateSet) {
+//        mUpdateSet |= additionalUpdateSet;
+//        if (mCameraDevice == null) {
+//            // We will update all the parameters when we open the device, so
+//            // we don't need to do anything now.
+//            mUpdateSet = 0;
+//            return;
+//        } else if (isCameraIdle()) {
+//            setCameraParameters(mUpdateSet);
+//            updateSceneMode();
+//            mUpdateSet = 0;
+//        } else {
+//            if (!mHandler.hasMessages(MSG_SET_CAMERA_PARAMETERS_WHEN_IDLE)) {
+//                mHandler.sendEmptyMessageDelayed(MSG_SET_CAMERA_PARAMETERS_WHEN_IDLE, 1000);
+//            }
+//        }
+    }
+
+    /**
+     * This Handler is used to post message back onto the main thread of the
+     * application
+     */
+    private static class MainHandler extends Handler {
+        // Messages defined for the UI thread handler.
+        private static final int MSG_FIRST_TIME_INIT = 1;
+        private static final int MSG_SET_CAMERA_PARAMETERS_WHEN_IDLE = 2;
+        private final WeakReference<PhotoModule> mModule;
+
+        public MainHandler(PhotoModule module) {
+            super(Looper.getMainLooper());
+            mModule = new WeakReference<PhotoModule>(module);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            PhotoModule module = mModule.get();
+            if (module == null) {
+                return;
+            }
+            switch (msg.what) {
+                case MSG_FIRST_TIME_INIT: {
+                    module.initializeFirstTime();
+                    break;
+                }
+
+                case MSG_SET_CAMERA_PARAMETERS_WHEN_IDLE: {
+                    module.setCameraParametersWhenIdle(0);
+                    break;
+                }
+            }
+        }
     }
 }

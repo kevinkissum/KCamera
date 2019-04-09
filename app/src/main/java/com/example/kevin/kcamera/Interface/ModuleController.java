@@ -1,6 +1,7 @@
 package com.example.kevin.kcamera.Interface;
 
 import com.example.kevin.kcamera.CameraActivity;
+import com.example.kevin.kcamera.Ex.CameraAgent;
 
 /**
  * The controller at app level.
@@ -75,7 +76,7 @@ public interface ModuleController {
          *
          * @param cameraProxy The camera device proxy.
          */
-        public void onCameraAvailable();
+        public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy);
 
     }
 
