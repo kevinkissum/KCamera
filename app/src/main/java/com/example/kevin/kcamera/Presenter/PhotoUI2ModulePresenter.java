@@ -7,7 +7,6 @@ import com.example.kevin.kcamera.CameraAppUI;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
 import com.example.kevin.kcamera.PhotoModule;
-import com.example.kevin.kcamera.PhotoUI;
 
 public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoModuleControll {
 
@@ -39,7 +38,7 @@ public class PhotoUI2ModulePresenter implements IPhotoUIStatusListener, IPhotoMo
     @Override
     public void onShutterButtonClick() {
         Log.d("kk", " onShutterButtionClick ");
-        mPhotoModule.takePicture();
+        mPhotoModule.onShutterButtonClick();
     }
 
     @Override

@@ -30,10 +30,10 @@ import android.widget.LinearLayout;
 
 import com.example.kevin.kcamera.AndroidServices;
 import com.example.kevin.kcamera.AnimationEffects;
+import com.example.kevin.kcamera.CameraUtil;
 import com.example.kevin.kcamera.CaptureLayoutHelper;
 import com.example.kevin.kcamera.Gusterpolator;
 import com.example.kevin.kcamera.R;
-import com.example.kevin.kcamera.Util;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -249,14 +249,14 @@ public class ModeListView extends FrameLayout implements ModeSelectorItem.Visibl
 
             int modeId = getModeIndex(i);
             selectorItem.setHighlightColor(getResources()
-                    .getColor(Util.getCameraThemeColorId(modeId, getContext())));
+                    .getColor(CameraUtil.getCameraThemeColorId(modeId, getContext())));
 
             // Set image
-            selectorItem.setImageResource(Util.getCameraModeIconResId(modeId, getContext()));
+            selectorItem.setImageResource(CameraUtil.getCameraModeIconResId(modeId, getContext()));
 
             // Set text
-            Log.d("kk", "  setText " + Util.getCameraModeText(modeId, getContext()) );
-            selectorItem.setText(Util.getCameraModeText(modeId, getContext()));
+            Log.d("kk", "  setText " + CameraUtil.getCameraModeText(modeId, getContext()) );
+            selectorItem.setText(CameraUtil.getCameraModeText(modeId, getContext()));
 
             selectorItem.setModeId(modeId);
             selectorItem.setOnClickListener(new OnClickListener() {

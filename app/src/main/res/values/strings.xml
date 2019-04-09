@@ -21,6 +21,13 @@
     <!-- Text shown in the camera mode options list for putting camera in refocus mode [CHAR LIMIT=25] -->
     <string name="mode_refocus">Lens Blur</string>
 
+    <string name="no_storage" product="default">Insert an SD card before using the camera.</string>
+    <!-- alert to the user that the SD card is being disk-checked -->
+    <string name="preparing_sd" product="default">Preparing SD card\u2026</string>
+    <!-- alert to the user that the camera fails to read or write the SD card. -->
+    <string name="access_sd_fail" product="default">Couldn\'t access SD card.</string>
+    <string name="spaceIsLow_content" product="default">Your SD card is running out of space. Change the quality setting or delete some images or other files.</string>
+
 
 
 </resources>

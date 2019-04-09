@@ -3,17 +3,19 @@ package com.example.kevin.kcamera;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 
 import com.example.kevin.kcamera.Abstract.CameraModule;
+import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
+import com.example.kevin.kcamera.Ex.CameraCapabilities;
+import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.Interface.ICameraControll;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
-import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
+import com.example.kevin.kcamera.Interface.PhotoController;
 
-import java.util.List;
-
-public class PhotoModule extends CameraModule implements ICameraControll{
+public class PhotoModule extends CameraModule implements ICameraControll, PhotoController {
 
 
     private static final String TAG = "PhotoModule";
@@ -25,19 +27,35 @@ public class PhotoModule extends CameraModule implements ICameraControll{
     private boolean mPaused;
     private int mCameraId;
     private AndroidCamera2Settings mCameraSettings;
+    private int mCameraState;
+    private AppController mAppController;
+    private boolean mVolumeButtonClickedFlag;
+    private FocusOverlayManager mFocusManager;
+    private boolean mIsImageCaptureIntent;
+    private boolean mSnapshotOnIdle;
+    private CameraCapabilities.SceneMode mSceneMode;
+
 
     public PhotoModule(CameraActivity activity, Handler handler) {
         mCameraControl = new CameraController(activity, handler, this);
         mContext = activity.getApplicationContext();
         mActivity = activity;
+        mAppController = activity;
         init();
     }
 
     public void init() {
         mUI = new PhotoUI(mActivity, mActivity.getModuleLayoutRoot());
+        mIsImageCaptureIntent = isImageCaptureIntent();
 
     }
 
+    @Override
+    public boolean isImageCaptureIntent() {
+        String action = mActivity.getIntent().getAction();
+        return (MediaStore.ACTION_IMAGE_CAPTURE.equals(action)
+                || CameraActivity.ACTION_IMAGE_CAPTURE_SECURE.equals(action));
+    }
 
     public void openCamera(SurfaceTexture surface, int width, int height) {
         mCameraControl.setSurfaceTexture(surface, width, height);
@@ -73,8 +91,8 @@ public class PhotoModule extends CameraModule implements ICameraControll{
             return;
         }
 
-        Size pictureSize = Util.getLargestPictureSize(mContext, mCameraId);
-        Size preViewSize = Util.getBestPreViewSize(mContext, mCameraId);
+        Size pictureSize = CameraUtil.getLargestPictureSize(mContext, mCameraId);
+        Size preViewSize = CameraUtil.getBestPreViewSize(mContext, mCameraId);
         mCameraSettings.setPhotoSize(pictureSize);
         mCameraSettings.setPreviewSize(preViewSize);
         mCameraControl.applySettings(mCameraSettings);
@@ -88,8 +106,54 @@ public class PhotoModule extends CameraModule implements ICameraControll{
         Log.d(TAG, "Preview size is " + preViewSize);
     }
 
-    public void takePicture() {
+    public void onShutterButtonClick() {
+        if (mPaused || (mCameraState == SWITCHING_CAMERA)
+                || (mCameraState == PREVIEW_STOPPED)
+                || !mAppController.isShutterEnabled()) {
+            mVolumeButtonClickedFlag = false;
+            return;
+        }
+        // Do not take the picture if there is not enough storage.
+        if (mActivity.getStorageSpaceBytes() <= Storage.LOW_STORAGE_THRESHOLD_BYTES) {
+            Log.e(TAG, "Not enough space or storage not ready. remaining="
+                    + mActivity.getStorageSpaceBytes());
+            mVolumeButtonClickedFlag = false;
+            return;
+        }
+
+        mAppController.setShutterEnabled(false);
+
+//        int countDownDuration = mActivity.getSettingsManager()
+//                .getInteger(SettingsManager.SCOPE_GLOBAL, Keys.KEY_COUNTDOWN_DURATION);
+//        mTimerDuration = countDownDuration;
+//        if (countDownDuration > 0) {
+//            // Start count down.
+//            mAppController.getCameraAppUI().transitionToCancel();
+//            mAppController.getCameraAppUI().hideModeOptions();
+//            mUI.startCountdown(countDownDuration);
+//            return;
+//        } else {
+            focusAndCapture();
+//        }
+
         mCameraControl.startTakePicture();
+    }
+
+    private void focusAndCapture() {
+        // If the user wants to do a snapshot while the previous one is still
+        // in progress, remember the fact and do it after we finish the previous
+        // one and re-start the preview. Snapshot in progress also includes the
+        // state that autofocus is focusing and a picture will be taken when
+        // focus callback arrives.
+        if ((mFocusManager.isFocusingSnapOnFinish() || mCameraState == SNAPSHOT_IN_PROGRESS)) {
+            if (!mIsImageCaptureIntent) {
+                mSnapshotOnIdle = true;
+            }
+            return;
+        }
+
+        mSnapshotOnIdle = false;
+        mFocusManager.focusAndCapture(mCameraSettings.getCurrentFocusMode());
     }
 
     public void switchCamera() {

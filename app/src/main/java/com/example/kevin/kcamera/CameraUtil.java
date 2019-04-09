@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -20,9 +22,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class Util {
+public class CameraUtil {
 
-    private static final String TAG = "Util";
+    private static final String TAG = "CameraUtil";
 
     private static final double ASPECT_RATIO_TOLERANCE = 0.05;
     public static final Rational ASPECT_RATIO_16x9 = new Rational(16, 9);
@@ -187,4 +189,20 @@ public class Util {
         return cameraModesText[modeIndex];    }
 
 
+    public static RectF rectToRectF(Rect r) {
+        return new RectF(r.left, r.top, r.right, r.bottom);
+    }
+
+    public static Rect rectFToRect(RectF rectF) {
+        Rect rect = new Rect();
+        inlineRectToRectF(rectF, rect);
+        return rect;
+    }
+
+    public static void inlineRectToRectF(RectF rectF, Rect rect) {
+        rect.left = Math.round(rectF.left);
+        rect.top = Math.round(rectF.top);
+        rect.right = Math.round(rectF.right);
+        rect.bottom = Math.round(rectF.bottom);
+    }
 }

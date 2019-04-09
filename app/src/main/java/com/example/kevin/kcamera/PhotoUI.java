@@ -77,5 +77,5 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
 
     }
 
-
 }
+

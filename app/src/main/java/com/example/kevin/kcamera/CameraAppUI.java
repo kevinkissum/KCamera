@@ -48,6 +48,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     private int mSlop;
     private GestureDetector mGestureDetector;
     private ModeListView mModeListView;
+    private boolean mDisableAllUserInteractions;
 
     private final ButtonManager.ButtonCallback mCameraCallback =
             new ButtonManager.ButtonCallback() {
@@ -177,6 +178,35 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     private void showShimmyDelayed() {
         // 隐藏modeListView
         mModeListView.showModeSwitcherHint();
+    }
+
+    public boolean isShutterButtonEnabled() {
+        return mBottomBar.isShutterButtonEnabled();
+    }
+
+    public void setDisableAllUserInteractions(boolean disable) {
+//        if (disable) {
+//            disableModeOptions();
+//            setShutterButtonEnabled(false);
+//            setSwipeEnabled(false);
+//            mModeListView.hideAnimated();
+//        } else {
+//            enableModeOptions();
+//            setShutterButtonEnabled(true);
+//            setSwipeEnabled(true);
+//        }
+//        mDisableAllUserInteractions = disable;
+    }
+
+    public void setShutterButtonEnabled(final boolean enabled) {
+        if (!mDisableAllUserInteractions) {
+            mBottomBar.post(new Runnable() {
+                @Override
+                public void run() {
+                    mBottomBar.setShutterButtonEnabled(enabled);
+                }
+            });
+        }
     }
 
     public interface NonDecorWindowSizeChangedListener {

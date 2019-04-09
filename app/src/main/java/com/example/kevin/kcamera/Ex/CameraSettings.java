@@ -1,4 +1,4 @@
-package com.example.kevin.kcamera;
+package com.example.kevin.kcamera.Ex;
 
 import android.util.Log;
 import android.util.Size;
@@ -10,6 +10,7 @@ public abstract class CameraSettings {
     protected boolean mSizesLocked;
     private Size mCurrentPhotoSize;
     private Size mCurrentPreviewSize;
+    private CameraCapabilities.FocusMode mCurrentFocusMode;
 
 
     public boolean setPhotoSize(Size photoSize) {
@@ -39,4 +40,9 @@ public abstract class CameraSettings {
     public Size getCurrentPhotoSize() {
         return new Size(mCurrentPhotoSize.getWidth(), mCurrentPhotoSize.getHeight());
     }
+
+    public CameraCapabilities.FocusMode getCurrentFocusMode() {
+        return mCurrentFocusMode;
+    }
+
 }

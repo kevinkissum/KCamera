@@ -139,4 +139,30 @@ public class BottomBar extends FrameLayout {
     }
 
 
+    public boolean isShutterButtonEnabled() {
+        return mShutterButton.isEnabled();
+    }
+
+    public void setShutterButtonEnabled(final boolean enabled) {
+        mShutterButton.post(new Runnable() {
+            @Override
+            public void run() {
+                mShutterButton.setEnabled(enabled);
+                setShutterButtonImportantToA11y(enabled);
+            }
+        });
+    }
+
+    /**
+     * Sets whether shutter button should be included in a11y announcement and
+     * navigation
+     */
+    public void setShutterButtonImportantToA11y(boolean important) {
+        if (important) {
+            mShutterButton.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
+        } else {
+            mShutterButton.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+    }
+
 }

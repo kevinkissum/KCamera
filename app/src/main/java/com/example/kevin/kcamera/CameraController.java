@@ -2,9 +2,7 @@ package com.example.kevin.kcamera;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.ImageFormat;
-import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -15,7 +13,6 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -23,13 +20,11 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
+import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
 import com.example.kevin.kcamera.Interface.ICameraControll;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 import static com.example.kevin.kcamera.CameraStates.STATE_PREVIEW;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
@@ -187,7 +182,7 @@ public class CameraController extends CameraDevice.StateCallback {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-//                    Util.showToast(mActivity, "Saved: " + mFile);
+//                    CameraUtil.showToast(mActivity, "Saved: " + mFile);
                     Log.d(TAG, "Save pic ".toString());
                     unlockFocus();
                 }
@@ -403,7 +398,7 @@ public class CameraController extends CameraDevice.StateCallback {
                         @Override
                         public void onConfigureFailed(
                                 @NonNull CameraCaptureSession cameraCaptureSession) {
-                            Util.showToast(mActivity,"onConfigureFailed Failed");
+                            CameraUtil.showToast(mActivity,"onConfigureFailed Failed");
                         }
                     }, null
             );

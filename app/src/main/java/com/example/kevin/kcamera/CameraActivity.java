@@ -5,6 +5,7 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,24 +16,44 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
 
+import com.example.kevin.kcamera.Interface.OnStorageUpdateDoneListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
-import com.example.kevin.kcamera.Interface.AppControll;
+import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.View.ModeListView;
 
 import java.lang.ref.WeakReference;
 
 
-public class CameraActivity extends AppCompatActivity implements AppControll {
+public class CameraActivity extends AppCompatActivity implements AppController {
 
     public static final String TAG = "CAM_CamActivity";
+
+    private static final String INTENT_ACTION_STILL_IMAGE_CAMERA_SECURE =
+            "android.media.action.STILL_IMAGE_CAMERA_SECURE";
+    public static final String ACTION_IMAGE_CAPTURE_SECURE =
+            "android.media.action.IMAGE_CAPTURE_SECURE";
+
+    // The intent extra for camera from secure lock screen. True if the gallery
+    // should only show newly captured pictures. sSecureAlbumId does not
+    // increment. This is used when switching between camera, camcorder, and
+    // panorama. If the extra is not set, it is in the normal camera mode.
+    public static final String SECURE_CAMERA_EXTRA = "secure_camera";
+
+    private static final int MSG_CLEAR_SCREEN_ON_FLAG = 2;
+    private static final long SCREEN_DELAY_MS = 2 * 60 * 1000; // 2 mins.
+    /** Load metadata for 10 items ahead of our current. */
+    private static final int FILMSTRIP_PRELOAD_AHEAD_ITEMS = 10;
+    private static final int PERMISSIONS_ACTIVITY_REQUEST_CODE = 1;
+    private static final int PERMISSIONS_RESULT_CODE_OK = 1;
+    private static final int PERMISSIONS_RESULT_CODE_FAILED = 2;
     private boolean mHasCriticalPermissions;
     private int mCameraId;
     private CameraController mCameraController;
     private Context mAppContext;
     private Handler mMainHandler;
     private PhotoModule mCurrentModule;
-    private CameraAppUI mCameraUI;
+    private CameraAppUI mCameraAppUI;
     private PhotoUI mPhotoUI;
     private MainActivityLayout mRootView;
     private PhotoUI2ModulePresenter mPresenter;
@@ -41,6 +62,11 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
     private ModeListView mModeListView;
     private ModuleManagerImpl mModuleManager;
     private boolean mModeListVisible;
+    private final Object mStorageSpaceLock = new Object();
+    private long mStorageSpaceBytes = Storage.LOW_STORAGE_THRESHOLD_BYTES;
+    private boolean mIsActivityRunning;
+    private boolean mPaused;
+    private OnScreenHint mStorageHint;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -60,11 +86,11 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
         mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
-        mCameraUI = new CameraAppUI(this, mRootView);
+        mCameraAppUI = new CameraAppUI(this, mRootView);
         mCurrentModule = new PhotoModule(this, mMainHandler);
-        mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mCameraUI);
+        mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mCameraAppUI);
         mCurrentModule.setPresenter(mPresenter);
-        mCameraUI.setPresenter(mPresenter);
+        mCameraAppUI.setPresenter(mPresenter);
         mModeListView = (ModeListView) findViewById(R.id.mode_list_layout);
         mModuleManager = new ModuleManagerImpl();
         ModulesInfo.setupModules(mAppContext, mModuleManager);
@@ -75,8 +101,14 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
     @Override
     protected void onStart() {
         super.onStart();
-        mCameraUI.onResume();
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mCameraAppUI.onResume();
+        updateStorageSpaceAndHint(null);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -108,8 +140,98 @@ public class CameraActivity extends AppCompatActivity implements AppControll {
         return mButtonManager;
     }
 
+    @Override
+    public boolean isShutterEnabled() {
+        return mCameraAppUI.isShutterButtonEnabled();
+    }
+
+    @Override
+    public void setShutterEnabled(boolean enabled) {
+        mCameraAppUI.setShutterButtonEnabled(enabled);
+    }
+
     public MainActivityLayout getModuleLayoutRoot() {
         return mRootView;
+    }
+
+    public long getStorageSpaceBytes() {
+        synchronized (mStorageSpaceLock) {
+            return mStorageSpaceBytes;
+        }
+    }
+
+    protected void updateStorageSpaceAndHint(final OnStorageUpdateDoneListener callback) {
+        /*
+         * We execute disk operations on a background thread in order to
+         * free up the UI thread.  Synchronizing on the lock below ensures
+         * that when getStorageSpaceBytes is called, the main thread waits
+         * until this method has completed.
+         *
+         * However, .execute() does not ensure this execution block will be
+         * run right away (.execute() schedules this AsyncTask for sometime
+         * in the future. executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+         * tries to execute the task in parellel with other AsyncTasks, but
+         * there's still no guarantee).
+         * e.g. don't call this then immediately call getStorageSpaceBytes().
+         * Instead, pass in an OnStorageUpdateDoneListener.
+         */
+        (new AsyncTask<Void, Void, Long>() {
+            @Override
+            protected Long doInBackground(Void ... arg) {
+                synchronized (mStorageSpaceLock) {
+                    mStorageSpaceBytes = Storage.getAvailableSpace();
+                    return mStorageSpaceBytes;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Long bytes) {
+                updateStorageHint(bytes);
+                // This callback returns after I/O to check disk, so we could be
+                // pausing and shutting down. If so, don't bother invoking.
+                if (callback != null && !mPaused) {
+                    callback.onStorageUpdateDone(bytes);
+                } else {
+                    Log.v(TAG, "ignoring storage callback after activity pause");
+                }
+            }
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    protected void updateStorageHint(long storageSpace) {
+        if (!mIsActivityRunning) {
+            return;
+        }
+
+        String message = null;
+        if (storageSpace == Storage.UNAVAILABLE) {
+            message = getString(R.string.no_storage);
+        } else if (storageSpace == Storage.PREPARING) {
+            message = getString(R.string.preparing_sd);
+        } else if (storageSpace == Storage.UNKNOWN_SIZE) {
+            message = getString(R.string.access_sd_fail);
+        } else if (storageSpace <= Storage.LOW_STORAGE_THRESHOLD_BYTES) {
+            message = getString(R.string.spaceIsLow_content);
+        }
+
+        if (message != null) {
+            Log.w(TAG, "Storage warning: " + message);
+            if (mStorageHint == null) {
+                mStorageHint = OnScreenHint.makeText(CameraActivity.this, message);
+            } else {
+                mStorageHint.setText(message);
+            }
+            mStorageHint.show();
+
+            // Disable all user interactions,
+            mCameraAppUI.setDisableAllUserInteractions(true);
+        } else if (mStorageHint != null) {
+            mStorageHint.cancel();
+            mStorageHint = null;
+
+            // Re-enable all user interactions.
+            mCameraAppUI.setDisableAllUserInteractions(false);
+        }
     }
 
     private static class MainHandler extends Handler {

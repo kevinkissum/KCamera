@@ -7,13 +7,10 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.example.kevin.kcamera.R;
-import com.example.kevin.kcamera.Util;
 
 public class ModeSelectorItem extends FrameLayout {
 

@@ -12,7 +12,7 @@ import android.widget.FrameLayout;
 
 import com.example.kevin.kcamera.CameraAppUI;
 import com.example.kevin.kcamera.R;
-import com.example.kevin.kcamera.Util;
+import com.example.kevin.kcamera.CameraUtil;
 
 public class MainActivityLayout  extends FrameLayout {
 
@@ -41,7 +41,7 @@ public class MainActivityLayout  extends FrameLayout {
         if (mNonDecorWindowSizeChangedListener != null) {
             mNonDecorWindowSizeChangedListener.onNonDecorWindowSizeChanged(
                     MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec),
-                    Util.getDisplayRotation());
+                    CameraUtil.getDisplayRotation());
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -52,7 +52,7 @@ public class MainActivityLayout  extends FrameLayout {
         if (mNonDecorWindowSizeChangedListener != null) {
             mNonDecorWindowSizeChangedListener.onNonDecorWindowSizeChanged(
                     getMeasuredWidth(), getMeasuredHeight(),
-                    Util.getDisplayRotation());
+                    CameraUtil.getDisplayRotation());
         }
     }
 
