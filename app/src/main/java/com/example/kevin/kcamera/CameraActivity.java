@@ -71,7 +71,6 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
     private boolean mIsActivityRunning;
     private boolean mPaused;
     private OnScreenHint mStorageHint;
-    private CameraController mCameraControl;
     private int mCurrentModeIndex;
 
 
@@ -84,14 +83,14 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_camera);
         getSupportActionBar().hide();
-        mCameraControl = new CameraController(this, new AndroidCamera2AgentImpl(getApplicationContext()), mMainHandler, this);
+        mMainHandler = new MainHandler(this, getMainLooper());
+        mCameraController = new CameraController(this, new AndroidCamera2AgentImpl(getApplicationContext()), mMainHandler, this);
         init();
-     }
+    }
 
     private void init() {
         AndroidContext.initialize(getApplicationContext());
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
-        mMainHandler = new MainHandler(this, getMainLooper());
         mAppContext = getApplicationContext();
         mCameraAppUI = new CameraAppUI(this, mRootView);
         mCurrentModule = new PhotoModule(this, mMainHandler);

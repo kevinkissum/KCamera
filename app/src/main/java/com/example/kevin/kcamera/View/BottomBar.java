@@ -60,25 +60,25 @@ public class BottomBar extends FrameLayout {
     @Override
     public void onFinishInflate() {
         super.onFinishInflate();
-//        mShutterButton =
-//                (ShutterButton) findViewById(R.id.shutter_button);
-//        mShutterButton.setOnTouchListener(new OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if (MotionEvent.ACTION_DOWN == event.getActionMasked()) {
-//                    setCaptureButtonDown();
-//                } else if (MotionEvent.ACTION_UP == event.getActionMasked() ||
-//                        MotionEvent.ACTION_CANCEL == event.getActionMasked()) {
-//                    setCaptureButtonUp();
-//                } else if (MotionEvent.ACTION_MOVE == event.getActionMasked()) {
-//                    mRect.set(0, 0, getWidth(), getHeight());
-//                    if (!mRect.contains(event.getX(), event.getY())) {
-//                        setCaptureButtonUp();
-//                    }
-//                }
-//                return false;
-//            }
-//        });
+        mShutterButton =
+                (ShutterButton) findViewById(R.id.shutter_button);
+        mShutterButton.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (MotionEvent.ACTION_DOWN == event.getActionMasked()) {
+                    setCaptureButtonDown();
+                } else if (MotionEvent.ACTION_UP == event.getActionMasked() ||
+                        MotionEvent.ACTION_CANCEL == event.getActionMasked()) {
+                    setCaptureButtonUp();
+                } else if (MotionEvent.ACTION_MOVE == event.getActionMasked()) {
+                    mRect.set(0, 0, getWidth(), getHeight());
+                    if (!mRect.contains(event.getX(), event.getY())) {
+                        setCaptureButtonUp();
+                    }
+                }
+                return false;
+            }
+        });
 
     }
 

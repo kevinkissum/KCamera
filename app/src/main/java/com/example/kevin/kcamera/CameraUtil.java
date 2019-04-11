@@ -19,7 +19,6 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class CameraUtil {
@@ -57,90 +56,6 @@ public class CameraUtil {
                 return 270;
         }
         return 0;
-    }
-
-    public static Size getLargestPictureSize(Context context, int cameraId) {
-        List<Size> sizes = null;
-        CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        try {
-            CameraCharacteristics characteristics
-                    = cameraManager.getCameraCharacteristics(cameraId + "");
-            StreamConfigurationMap map = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            if (map == null) {
-                return null;
-            }
-            // For still image captures, we use the largest available size.
-            sizes = Arrays.asList(map.getOutputSizes(ImageFormat.JPEG));
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-        if (sizes == null) {
-            return null;
-        }
-        Size maxSize = new Size(0, 0);
-        int pixelsDiff = DEFAULT_CAPTURE_PIXELS;
-        for (Size size : sizes) {
-            Rational aspectRatio = getAspectRatio(size);
-            int pixelNum = size.getWidth() * size.getHeight();
-            int d = DEFAULT_CAPTURE_PIXELS - pixelNum;
-            // Skip if the aspect ratio is not desired.
-            if (!hasSameAspectRatio(aspectRatio, ASPECT_RATIO_16x9) && d < 0) {
-//                Log.d("kk", "  continue  size " +  size.toString() );
-                continue;
-            }
-            d = Math.abs(d);
-//            Log.d("kk", "  continue  pixelNum " +  pixelNum );
-            if (d < pixelsDiff) {
-                pixelsDiff = d;
-                maxSize = size;
-//                Log.d("kk", "     maxSize " +  maxSize.toString() );
-            }
-        }
-
-        return maxSize;
-    }
-
-    public static Size getBestPreViewSize(Context context, int cameraId) {
-        List<Size> sizes = null;
-        CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        try {
-            CameraCharacteristics characteristics
-                    = cameraManager.getCameraCharacteristics(cameraId + "");
-            StreamConfigurationMap map = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            if (map == null) {
-                return null;
-            }
-            // For Preview is SurfaceTexture
-            // For VideoSize is MediaRecorder
-            sizes = Arrays.asList(map.getOutputSizes(SurfaceTexture.class));
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-        if (sizes == null) {
-            return null;
-        }
-        Size maxSize = new Size(0, 0);
-        int pixelsDiff = DEFAULT_CAPTURE_PIXELS;
-        for (Size size : sizes) {
-            Rational aspectRatio = getAspectRatio(size);
-            int pixelNum = size.getWidth() * size.getHeight();
-            int d = DEFAULT_CAPTURE_PIXELS - pixelNum;
-            // Skip if the aspect ratio is not desired.
-            if (!hasSameAspectRatio(aspectRatio, ASPECT_RATIO_16x9) && d < 0) {
-                continue;
-            }
-            d = Math.abs(d);
-            if (d < pixelsDiff) {
-                pixelsDiff = d;
-                maxSize = size;
-            }
-        }
-
-        return maxSize;
     }
 
     public static Rational getAspectRatio(Size size) {

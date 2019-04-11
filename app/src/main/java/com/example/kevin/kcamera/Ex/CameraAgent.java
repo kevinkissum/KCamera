@@ -116,7 +116,7 @@ public abstract class CameraAgent {
         public abstract int getCameraId();
         public abstract CameraAgent getAgent();
         public abstract DispatchThread getDispatchThread();
-
+        public abstract CameraSettings getSettings();
         public abstract Handler getCameraHandler();
 
         public void setPreviewTexture(final SurfaceTexture surfaceTexture) {

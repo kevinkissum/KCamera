@@ -7,12 +7,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.util.Size;
 
 import com.example.kevin.kcamera.Abstract.CameraModule;
+import com.example.kevin.kcamera.Size;
 import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
 import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Ex.CameraCapabilities;
+import com.example.kevin.kcamera.Ex.CameraSettings;
 import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.PhotoController;
@@ -22,14 +23,14 @@ import java.lang.ref.WeakReference;
 public class PhotoModule extends CameraModule implements PhotoController {
 
 
-    private static final String TAG = "PhotoModule";
+    private static final String TAG = "CAM_PhotoModule";
     private CameraActivity mActivity;
     private Context mContext;
     private PhotoUI mUI;
     private IPhotoModuleControll mPhotoControl;
     private boolean mPaused;
     private int mCameraId;
-    private AndroidCamera2Settings mCameraSettings;
+    private CameraSettings mCameraSettings;
     private int mCameraState;
     private AppController mAppController;
     private boolean mVolumeButtonClickedFlag;
@@ -69,8 +70,8 @@ public class PhotoModule extends CameraModule implements PhotoController {
     }
 
     public void requestCameraOpen(SurfaceTexture surface, int width, int height) {
-        mCameraControl.setSurfaceTexture(surface, width, height);
-        mCameraControl.requestCamera(mCameraId, true);
+//        mCameraControl.setSurfaceTexture(surface, width, height);
+//        mCameraControl.requestCamera(mCameraId, true);
     }
 
     private void requestCameraOpen() {
@@ -160,19 +161,6 @@ public class PhotoModule extends CameraModule implements PhotoController {
             return;
         }
 
-        Size pictureSize = CameraUtil.getLargestPictureSize(mContext, mCameraId);
-        Size preViewSize = CameraUtil.getBestPreViewSize(mContext, mCameraId);
-        mCameraSettings.setPhotoSize(pictureSize);
-        mCameraSettings.setPreviewSize(preViewSize);
-//        mCameraProxy.applySettings(mCameraSettings);
-        Size currentSize = mCameraSettings.getCurrentPreviewSize();
-
-        if (currentSize.getWidth() != 0 && currentSize.getHeight() != 0) {
-            Log.v(TAG, "updating aspect ratio");
-            mPhotoControl.updatePreviewAspectRatio(currentSize.getHeight(), currentSize.getWidth());
-        }
-        Log.d(TAG, "PictureSize is " + pictureSize);
-        Log.d(TAG, "Preview size is " + preViewSize);
     }
 
     public void onShutterButtonClick() {
@@ -231,12 +219,12 @@ public class PhotoModule extends CameraModule implements PhotoController {
         }
         closeCamera();
         mCameraId ^= 1;
-        mCameraControl.requestCamera(mCameraId, true);
+//        mCameraControl.requestCamera(mCameraId, true);
         requestCameraOpen();
     }
 
     private void closeCamera() {
-        mCameraControl.closeCamera();
+//        mCameraControl.closeCamera();
     }
 
 
@@ -288,6 +276,7 @@ public class PhotoModule extends CameraModule implements PhotoController {
             return;
         }
         mCameraProxy = cameraProxy;
+        mCameraSettings = mCameraProxy.getSettings();
         startPreview();
 //        onCameraOpened();
 

@@ -73,7 +73,7 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
 
     @Override
     protected CameraExceptionHandler getCameraExceptionHandler() {
-        return null;
+        return mExceptionHandler;
     }
 
     // TODO: Some indices may now be invalid; ensure everyone can handle that and update the docs
@@ -256,9 +256,23 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
     }
 
     protected class AndroidCamera2ProxyImpl extends CameraAgent.CameraProxy {
+        private final AndroidCamera2AgentImpl mCameraAgent;
+        private final int mCameraIndex;
+        private final CameraDevice mCamera;
+        private final CameraDeviceInfo.Characteristics mCharacteristics;
+        private final AndroidCamera2Capabilities mCapabilities;
+        protected CameraSettings mLastSettings;
+        private boolean mShutterSoundEnabled;
+        protected Runnable takePictureRunnable = null;
 
-        public AndroidCamera2ProxyImpl(AndroidCamera2AgentImpl androidCamera2Agent, int mCameraIndex, CameraDevice mCamera, CameraDeviceInfo.Characteristics characteristics, CameraCharacteristics props) {
-
+        public AndroidCamera2ProxyImpl(AndroidCamera2AgentImpl agent, int cameraIndex, CameraDevice camera, CameraDeviceInfo.Characteristics characteristics, CameraCharacteristics properties) {
+            mCameraAgent = agent;
+            mCameraIndex = cameraIndex;
+            mCamera = camera;
+            mCharacteristics = characteristics;
+            mCapabilities = new AndroidCamera2Capabilities(properties);
+            mLastSettings = null;
+            mShutterSoundEnabled = true;
         }
 
         @Override
@@ -268,17 +282,24 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
 
         @Override
         public CameraAgent getAgent() {
-            return null;
+            return mCameraAgent;
         }
 
         @Override
         public DispatchThread getDispatchThread() {
-            return null;
+            return AndroidCamera2AgentImpl.this.getDispatchThread();
         }
 
         @Override
+        public CameraSettings getSettings() {
+            if (mLastSettings == null) {
+                mLastSettings = mCameraHandler.buildSettings(mCapabilities);
+            }
+            return mLastSettings;        }
+
+        @Override
         public Handler getCameraHandler() {
-            return null;
+            return AndroidCamera2AgentImpl.this.getCameraHandler();
         }
     }
 
@@ -341,6 +362,15 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
             super(looper);
         }
 
+        public CameraSettings buildSettings(AndroidCamera2Capabilities caps) {
+            try {
+                return new AndroidCamera2Settings(mCamera, CameraDevice.TEMPLATE_PREVIEW,
+                        mActiveArray, mPreviewSize, mPhotoSize);
+            } catch (CameraAccessException ex) {
+                Log.e(TAG, "Unable to query camera device to build settings representation");
+                return null;
+            }
+        }
 
         @SuppressLint("MissingPermission")
         @Override

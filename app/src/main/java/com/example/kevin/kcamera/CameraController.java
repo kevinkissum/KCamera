@@ -223,11 +223,6 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
         mCameraAgent = cameraAgent;
     }
 
-    public void applySettings(AndroidCamera2Settings settings) {
-        mPreviewSize = settings.getCurrentPreviewSize();
-        mPhotoSize = settings.getCurrentPhotoSize();
-    }
-
     public void requestCamera(int id, boolean useNewApi) {
         Log.d(TAG, "requestCamera " + id );
         if (mRequestingCameraId == id) {
@@ -504,11 +499,6 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
             mImageReader.close();
             mImageReader = null;
         }
-    }
-
-    public AndroidCamera2Settings getCameraSettings() {
-        return new AndroidCamera2Settings(mCameraProxy, CameraDevice.TEMPLATE_PREVIEW,
-                mPreviewSize, mPhotoSize);
     }
 
     public void startPreview() {

@@ -222,11 +222,6 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         mCameraAgent = cameraAgent;
     }
 
-    public void applySettings(AndroidCamera2Settings settings) {
-        mPreviewSize = settings.getCurrentPreviewSize();
-        mPhotoSize = settings.getCurrentPhotoSize();
-    }
-
     public void requestCamera(int id, boolean useNewApi) {
         Log.d(TAG, "requestCamera " + id );
         if (mRequestingCameraId == id) {
