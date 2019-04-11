@@ -4,11 +4,13 @@ import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraDevice;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 public abstract class CameraAgent {
 
     public final static String TAG = "CAM_CameraAgent";
+    public static long CAMERA_OPERATION_TIMEOUT_MS = 3500;
 
     /**
      * An interface to be called for any events when opening or closing the
@@ -66,11 +68,55 @@ public abstract class CameraAgent {
         public void onPreviewStarted();
     }
 
+    /**
+     * An interface which wraps
+     * {@link android.hardware.Camera.AutoFocusCallback}.
+     */
+    public static interface CameraAFCallback {
+        public void onAutoFocus(boolean focused, CameraProxy camera);
+    }
+
+    /**
+     * An interface which wraps
+     * {@link android.hardware.Camera.AutoFocusMoveCallback}.
+     */
+    public static interface CameraAFMoveCallback {
+        public void onAutoFocusMoving(boolean moving, CameraProxy camera);
+
+    }
+
+    /**
+     * Opens the camera of the specified ID asynchronously. The camera device
+     * will be opened in the camera handler thread and will be returned through
+     * the {@link CameraAgent.CameraOpenCallback#
+     * onCameraOpened(com.android.camera.cameradevice.CameraAgent.CameraProxy)}.
+     *
+     * @param handler The {@link android.os.Handler} in which the callback
+     *                was handled.
+     * @param callback The callback for the result.
+     * @param cameraId The camera ID to open.
+     */
+    public void openCamera(final Handler handler, final int cameraId,
+                           final CameraOpenCallback callback) {
+        try {
+            getDispatchThread().runJob(new Runnable() {
+                @Override
+                public void run() {
+                    getCameraHandler().obtainMessage(CameraActions.OPEN_CAMERA, cameraId, 0,
+                            CameraOpenCallbackForward.getNewInstance(handler, callback)).sendToTarget();
+                }
+            });
+        } catch (final RuntimeException ex) {
+            getCameraExceptionHandler().onDispatchThreadException(ex);
+        }
+    }
+
     public abstract static class CameraProxy {
 
         public abstract int getCameraId();
         public abstract CameraAgent getAgent();
         public abstract DispatchThread getDispatchThread();
+
         public abstract Handler getCameraHandler();
 
         public void setPreviewTexture(final SurfaceTexture surfaceTexture) {
@@ -101,13 +147,13 @@ public abstract class CameraAgent {
         }
 
     }
-
     /**
      * A callback helps to invoke the original callback on another
      * {@link android.os.Handler}.
      */
     public static class CameraOpenCallbackForward implements CameraOpenCallback {
         private final Handler mHandler;
+
         private final CameraOpenCallback mCallback;
 
         /**
@@ -193,7 +239,6 @@ public abstract class CameraAgent {
                     mCallback.onDeviceOpenedAlready(cameraId, info);
                 }});
         }
-
         @Override
         public void onReconnectionFailure(final CameraAgent mgr, final String info) {
             mHandler.post(new Runnable() {
@@ -202,6 +247,7 @@ public abstract class CameraAgent {
                     mCallback.onReconnectionFailure(mgr, info);
                 }});
         }
+
     }
 
     public abstract DispatchThread getDispatchThread();
@@ -210,35 +256,38 @@ public abstract class CameraAgent {
 
     protected abstract CameraExceptionHandler getCameraExceptionHandler();
 
+    public abstract CameraDeviceInfo getCameraDeviceInfo();
 
-    /**
-     * Opens the camera of the specified ID asynchronously. The camera device
-     * will be opened in the camera handler thread and will be returned through
-     * the {@link CameraAgent.CameraOpenCallback#
-     * onCameraOpened(com.android.camera.cameradevice.CameraAgent.CameraProxy)}.
-     *
-     * @param handler The {@link android.os.Handler} in which the callback
-     *                was handled.
-     * @param callback The callback for the result.
-     * @param cameraId The camera ID to open.
-     */
-    public void openCamera(final Handler handler, final int cameraId,
-                           final CameraOpenCallback callback) {
-        try {
-            getDispatchThread().runJob(new Runnable() {
+
+    public static class WaitDoneBundle {
+        public final Runnable mUnlockRunnable;
+        public final Object mWaitLock;
+
+        WaitDoneBundle() {
+            mWaitLock = new Object();
+            mUnlockRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    getCameraHandler().obtainMessage(CameraActions.OPEN_CAMERA, cameraId, 0,
-                            CameraOpenCallbackForward.getNewInstance(handler, callback)).sendToTarget();
-                }
-            });
-        } catch (final RuntimeException ex) {
-            getCameraExceptionHandler().onDispatchThreadException(ex);
+                    synchronized (mWaitLock) {
+                        mWaitLock.notifyAll();
+                    }
+                }};
+        }
+
+        /**
+         * Notify all synchronous waiters waiting on message completion with {@link #mWaitLock}.
+         *
+         * <p>This assumes that the message was sent with {@code this} as the {@code Message#obj}.
+         * Otherwise the message is ignored.</p>
+         */
+        /*package*/ static void unblockSyncWaiters(Message msg) {
+            if (msg == null) return;
+
+            if (msg.obj instanceof WaitDoneBundle) {
+                WaitDoneBundle bundle = (WaitDoneBundle)msg.obj;
+                bundle.mUnlockRunnable.run();
+            }
         }
     }
-
-    /**
-     * Starts the camera preview.
-     */
 
 }

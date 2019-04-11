@@ -164,8 +164,8 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
                 return;
             }
             // This is the CaptureRequest.Builder that we use to take a picture.
-            final CaptureRequest.Builder captureBuilder =
-                    mCameraProxy.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            final CaptureRequest.Builder captureBuilder = null
+                    /*mCameraProxy.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)*/;
             captureBuilder.addTarget(mImageReader.getSurface());
 
             // Use the same AE and AF modes as the preview.
