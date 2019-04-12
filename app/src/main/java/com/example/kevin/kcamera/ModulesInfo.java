@@ -74,9 +74,9 @@ public class ModulesInfo {
             }
 
             @Override
-            public ModuleController createModule(CameraActivity app, Handler handler) {
+            public ModuleController createModule(CameraActivity app, Intent handler) {
                 Log.v(TAG, "EnableCaptureModule = " + enableCaptureModule);
-                return new PhotoModule(app, handler);
+                return new PhotoModule(app);
             }
         });
     }
@@ -100,7 +100,7 @@ public class ModulesInfo {
             }
 
             @Override
-            public ModuleController createModule(CameraActivity app, Handler handler) {
+            public ModuleController createModule(CameraActivity app, Intent handler) {
                 return new VideoModule(app);
             }
         });

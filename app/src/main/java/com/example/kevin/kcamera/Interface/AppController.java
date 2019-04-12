@@ -24,4 +24,10 @@ public interface AppController {
     public Context getAndroidContext();
 
 
+    void updatePreviewAspectRatio(float v);
+
+    OrientationManager getOrientationManager();
+
+    public void onModeSelected(int moduleIndex);
+
 }

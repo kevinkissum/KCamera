@@ -1,15 +1,25 @@
 package com.example.kevin.kcamera.Interface;
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-
-// SPRD: Fix bug 535110, Photo voice record.
-import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 
 import com.example.kevin.kcamera.Ex.exif.ExifInterface;
-
 
 /**
  * An interface defining the media saver which saves media files in the
@@ -41,7 +51,7 @@ public interface MediaSaver {
          * The callback when the saving is done in the background.
          * @param uri The final content Uri of the saved media.
          */
-        public void onMediaSaved(Uri uri, String title);
+        public void onMediaSaved(Uri uri);
     }
 
     /**
@@ -72,15 +82,8 @@ public interface MediaSaver {
      * @param exif The EXIF data of this image.
      * @param l A callback object used when the saving is done.
      */
-
     void addImage(byte[] data, String title, long date, Location loc, int width, int height,
                   int orientation, ExifInterface exif, OnMediaSavedListener l);
-
-    /* SPRD: Fix bug 535110, Photo voice record. @{ */
-    void addImage(byte[] data, String title, long date, Location loc,
-                  int width, int height, int orientation, ExifInterface exif,
-                  OnMediaSavedListener l, String photoVoicePath);
-    /* @} */
 
     /**
      * Adds an image into {@link android.content.ContentResolver} and also
@@ -101,24 +104,9 @@ public interface MediaSaver {
      * @param l A callback object used when the saving is done.
      * @param mimeType The mimeType of the image.
      */
-    /*
-     * SPRD: Fix bug 535110, Photo voice record. @{
-     * Original Android code :
     void addImage(byte[] data, String title, long date, Location loc, int width, int height,
-            int orientation, ExifInterface exif, OnMediaSavedListener l, String mimeType);
-     */
-    void addImage(byte[] data, String title, long date, Location loc,
-                  int width, int height, int orientation, ExifInterface exif,
-                  OnMediaSavedListener l, String mimeType, String photoVoicePath);
+                  int orientation, ExifInterface exif, OnMediaSavedListener l, String mimeType);
 
-//    void addImage(byte[] data, String title, long date, Location loc,
-//                  int width, int height, int orientation, ExifInterface exif,
-//                  OnMediaSavedListener l, String mimeType, String photoVoicePath, XmpBuilder builder);
-    /* @} */
-
-    void updateImage(Uri uri, byte[] data, String title, long date, Location loc,
-                     int width, int height, int orientation, ExifInterface exif,
-                     OnMediaSavedListener l, String mimeType, String photoVoicePath);
     /**
      * Adds an image into {@link android.content.ContentResolver} and also
      * saves the file to the storage in the background. The width and height
@@ -157,14 +145,6 @@ public interface MediaSaver {
     void addImage(byte[] data, String title, Location loc, int width, int height, int orientation,
                   ExifInterface exif, OnMediaSavedListener l);
 
-    // SPRD: Fix bug 535110, Photo voice record.
-    void addImage(byte[] data, String title, Location loc, int width, int height, int orientation,
-                  ExifInterface exif, OnMediaSavedListener l, String photoVoicePath);
-
-    // SPRD: Fix bug 474843, New feature of filter.
-    void addImage(byte[] data, String title, long date, Location loc, int width, int height,
-                  int orientation, ExifInterface exif, OnMediaSavedListener l, String photoVoicePath, boolean filterHandle);
-
     /**
      * Adds the video data into the {@link android.content.ContentResolver} in
      * the background. Only the database is updated here. The file should
@@ -179,26 +159,4 @@ public interface MediaSaver {
      * Sets the queue listener.
      */
     void setQueueListener(QueueListener l);
-
-    /**
-     * SRPD BUG:388273
-     */
-    public interface Listener {//SPRD BUG:388273
-        public void onHideBurstScreenHint();
-        public int getContinuousCaptureCount();
-    }
-
-    /*
-     * SPRD: fix bug 681226 Take photo with FilterModule take time longer than compared mobile  @{
-     */
-    public interface FilterListener {
-        public void onFilterThumbnailReady(Bitmap thumbnail);
-    }
-    /* @} */
-
-    public void setListener(Listener l);
-    public void setFilterListener(FilterListener listener);
-    public boolean isEmptyQueue();
-    public void addMemoryUse(long length);
-    public void reduceMemoryUse(long length);
 }

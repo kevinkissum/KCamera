@@ -85,6 +85,14 @@ public abstract class CameraAgent {
 
     }
 
+    public static interface CameraShutterCallback {
+        public void onShutter(CameraProxy camera);
+    }
+
+    public static interface CameraPictureCallback {
+        public void onPictureTaken(byte[] data, CameraProxy camera);
+    }
+
     /**
      * Opens the camera of the specified ID asynchronously. The camera device
      * will be opened in the camera handler thread and will be returned through
@@ -121,6 +129,13 @@ public abstract class CameraAgent {
         public abstract CameraCapabilities getCapabilities();
         public abstract CameraStateHolder getCameraState();
         public abstract boolean applySettings(CameraSettings settings);
+        public abstract void autoFocus(Handler handler, CameraAFCallback cb);
+        public abstract void takePicture(
+                Handler handler,
+                CameraShutterCallback shutter,
+                CameraPictureCallback raw,
+                CameraPictureCallback postview,
+                CameraPictureCallback jpeg);
 
         public void setPreviewTexture(final SurfaceTexture surfaceTexture) {
             try {
@@ -143,6 +158,38 @@ public abstract class CameraAgent {
                     public void run() {
                         getCameraHandler()
                                 .obtainMessage(CameraActions.START_PREVIEW_ASYNC, null).sendToTarget();
+                    }});
+            } catch (final RuntimeException ex) {
+                getAgent().getCameraExceptionHandler().onDispatchThreadException(ex);
+            }
+        }
+
+        public void stopPreview() {
+            // Don't bother to wait since camera is in bad state.
+            if (getCameraState().isInvalid()) {
+                return;
+            }
+            final WaitDoneBundle bundle = new WaitDoneBundle();
+            try {
+                getDispatchThread().runJobSync(new Runnable() {
+                    @Override
+                    public void run() {
+                        getCameraHandler().obtainMessage(CameraActions.STOP_PREVIEW, bundle)
+                                .sendToTarget();
+                    }}, bundle.mWaitLock, CAMERA_OPERATION_TIMEOUT_MS, "stop preview");
+            } catch (final RuntimeException ex) {
+                getAgent().getCameraExceptionHandler().onDispatchThreadException(ex);
+            }
+        }
+
+        public void setJpegOrientation(final int degrees) {
+            try {
+                getDispatchThread().runJob(new Runnable() {
+                    @Override
+                    public void run() {
+                        getCameraHandler()
+                                .obtainMessage(CameraActions.SET_JPEG_ORIENTATION, degrees, 0)
+                                .sendToTarget();
                     }});
             } catch (final RuntimeException ex) {
                 getAgent().getCameraExceptionHandler().onDispatchThreadException(ex);
@@ -197,7 +244,6 @@ public abstract class CameraAgent {
             }
             return true;
         }
-
     }
     /**
      * A callback helps to invoke the original callback on another

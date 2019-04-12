@@ -4,13 +4,15 @@ import com.example.kevin.kcamera.Abstract.CameraModule;
 import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Interface.ModuleController;
 
-class VideoModule extends CameraModule {
+public class VideoModule extends CameraModule {
     public VideoModule(CameraActivity app) {
+        super(app);
 
     }
 
+
     @Override
-    public void init(CameraActivity activity, boolean isSecureCamera, boolean isCaptureIntent) {
+    public void init(CameraActivity activity) {
 
     }
 
@@ -46,6 +48,21 @@ class VideoModule extends CameraModule {
 
     @Override
     public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy) {
+
+    }
+
+    @Override
+    public void onShutterButtonFocus(boolean pressed) {
+
+    }
+
+    @Override
+    public void onShutterButtonClick() {
+
+    }
+
+    @Override
+    public void onShutterButtonLongPressed() {
 
     }
 }

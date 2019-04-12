@@ -39,6 +39,7 @@ public class CameraController implements CameraAgent.CameraOpenCallback , Camera
     private static final int EMPTY_REQUEST = -1;
 
     private final Handler mainHandler;
+    private final CameraDeviceInfo mInfo;
     private int mRequestingCameraId = -1;
     private CameraManager mCameraManager;
     private CameraAgent mCameraAgent;
@@ -224,6 +225,7 @@ public class CameraController implements CameraAgent.CameraOpenCallback , Camera
         mainHandler = handler;
         mCallbackReceiver = receiver;
         mCameraAgent = cameraAgent;
+        mInfo = mCameraAgent.getCameraDeviceInfo();
     }
 
     @Override
@@ -274,8 +276,10 @@ public class CameraController implements CameraAgent.CameraOpenCallback , Camera
 
     @Override
     public CameraDeviceInfo.Characteristics getCharacteristics(int cameraId) {
-        return null;
-    }
+        if (mInfo == null) {
+            return null;
+        }
+        return mInfo.getCharacteristics(cameraId);    }
 
     @Override
     public CameraId getCurrentCameraId() {

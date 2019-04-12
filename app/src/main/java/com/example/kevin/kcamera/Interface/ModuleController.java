@@ -2,11 +2,12 @@ package com.example.kevin.kcamera.Interface;
 
 import com.example.kevin.kcamera.CameraActivity;
 import com.example.kevin.kcamera.Ex.CameraAgent;
+import com.example.kevin.kcamera.View.ShutterButton;
 
 /**
  * The controller at app level.
  */
-public interface ModuleController {
+public interface ModuleController extends ShutterButton.OnShutterButtonListener {
         /** Preview is fully visible. */
         public static final int VISIBILITY_VISIBLE = 0;
         /** Preview is covered by e.g. the transparent mode drawer. */
@@ -23,7 +24,7 @@ public interface ModuleController {
          * @param isSecureCamera Whether the app is in secure camera mode.
          * @param isCaptureIntent Whether the app is in capture intent mode.
          */
-        public void init(CameraActivity activity, boolean isSecureCamera, boolean isCaptureIntent);
+        public void init(CameraActivity activity);
 
         /**
          * Resumes the module. Always call this method whenever it's being put in

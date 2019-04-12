@@ -18,11 +18,12 @@ import android.util.Log;
 import android.view.TextureView;
 import android.view.Window;
 
+import com.example.kevin.kcamera.Abstract.CameraModule;
 import com.example.kevin.kcamera.Ex.AndroidCamera2AgentImpl;
 import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Interface.CameraServices;
 import com.example.kevin.kcamera.Interface.OnStorageUpdateDoneListener;
-import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
+import com.example.kevin.kcamera.Interface.OrientationManager;
 import com.example.kevin.kcamera.View.MainActivityLayout;
 import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.View.ModeListView;
@@ -57,11 +58,10 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
     private CameraController mCameraController;
     private Context mAppContext;
     private Handler mMainHandler;
-    private PhotoModule mCurrentModule;
+    private CameraModule mCurrentModule;
     private CameraAppUI mCameraAppUI;
     private PhotoUI mPhotoUI;
     private MainActivityLayout mRootView;
-    private PhotoUI2ModulePresenter mPresenter;
     private ActionBar mActionBar;
     private ButtonManager mButtonManager;
     private ModeListView mModeListView;
@@ -72,7 +72,8 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
     private boolean mIsActivityRunning;
     private boolean mPaused;
     private OnScreenHint mStorageHint;
-    private int mCurrentModeIndex;
+    private int mCurrentModeIndex = -1;
+    private OrientationManager mOrientationManager;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -84,31 +85,48 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_camera);
         getSupportActionBar().hide();
+        AndroidContext.initialize(getApplicationContext());
         mMainHandler = new MainHandler(this, getMainLooper());
         mCameraController = new CameraController(this, new AndroidCamera2AgentImpl(getApplicationContext()), mMainHandler, this);
+        mOrientationManager = new OrientationManagerImpl(this, mMainHandler);
         init();
     }
 
     private void init() {
-        AndroidContext.initialize(getApplicationContext());
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
         mAppContext = getApplicationContext();
         mCameraAppUI = new CameraAppUI(this, mRootView);
-        mCurrentModule = new PhotoModule(this, mMainHandler);
-        mPresenter = new PhotoUI2ModulePresenter(mCurrentModule, mCameraAppUI);
-        mCurrentModule.setPresenter(mPresenter);
-        mCameraAppUI.setPresenter(mPresenter);
-        mModeListView = (ModeListView) findViewById(R.id.mode_list_layout);
         mModuleManager = new ModuleManagerImpl();
         ModulesInfo.setupModules(mAppContext, mModuleManager);
+        setModuleFromModeIndex(getModeIndex());
+        mCurrentModule.init(this);
+        mModeListView = (ModeListView) findViewById(R.id.mode_list_layout);
         mModeListView.init(mModuleManager.getSupportedModeIndexList());
 
+    }
+
+    private void setModuleFromModeIndex(int modeIndex) {
+        ModuleManagerImpl.ModuleAgent agent = mModuleManager.getModuleAgent(modeIndex);
+        if (agent == null) {
+            return;
+        }
+        if (!agent.requestAppForCamera()) {
+            mCameraController.closeCamera(true);
+        }
+        mCurrentModeIndex = agent.getModuleId();
+        mCurrentModule = (CameraModule) agent.createModule(this, getIntent());
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        int modeIndex = getModeIndex();
+        onModeSelected(modeIndex);
 
+    }
+
+    private int getModeIndex() {
+        return getResources().getInteger(R.integer.camera_mode_photo);
     }
 
     @Override
@@ -312,6 +330,33 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
     @Override
     public Context getAndroidContext() {
         return getApplicationContext();
+    }
+
+    @Override
+    public void updatePreviewAspectRatio(float aspectRatio) {
+//        mCameraAppUI.setPreViewSize(aspectRatio);
+    }
+
+    @Override
+    public OrientationManager getOrientationManager() {
+        return mOrientationManager;
+    }
+
+    @Override
+    public void onModeSelected(int modeIndex) {
+        Log.v(TAG, "onModeSelected 》》》》》》》》》》》》》》》》》》》》》》》》》》" + modeIndex);
+        Log.v(TAG, "onModeSelected 》》》》》》》》》》》》》》》》》》》》》》》》》》" + mCurrentModeIndex);
+        if (mCurrentModeIndex == modeIndex) {
+            return;
+        }
+        openModule(mCurrentModule);
+        mCameraAppUI.addShutterListener(mCurrentModule);
+
+    }
+
+    private void openModule(CameraModule module) {
+        Log.v(TAG, "openModule 》》》》》》》》》》》》》》》》》》》》》》》》》》");
+        module.init(this);
     }
 
     public CameraAppUI getCameraAppUI() {

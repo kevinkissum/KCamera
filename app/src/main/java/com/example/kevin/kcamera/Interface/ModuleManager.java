@@ -39,7 +39,7 @@ public interface ModuleManager {
          * @param intent The {@link android.content.Intent} which starts the activity.
          * @return The module.
          */
-        public ModuleController createModule(CameraActivity app, Handler intent);
+        public ModuleController createModule(CameraActivity app, Intent intent);
     }
 
     /**

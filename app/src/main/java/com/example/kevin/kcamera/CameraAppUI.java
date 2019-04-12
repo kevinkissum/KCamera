@@ -9,8 +9,6 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 
-import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
-import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -20,7 +18,9 @@ import com.example.kevin.kcamera.View.PreviewOverlay;
 import com.example.kevin.kcamera.View.ShutterButton;
 import com.example.kevin.kcamera.View.StickyBottomCaptureLayout;
 
-public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterButton.OnShutterButtonListener, View.OnClickListener, ModeListView.ModeListOpenListener {
+public class CameraAppUI implements TextureView.SurfaceTextureListener,
+        ShutterButton.OnShutterButtonListener, View.OnClickListener,
+        ModeListView.ModeListOpenListener {
 
     private static final String TAG = "CameraAppUI";
 
@@ -35,7 +35,6 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     private Context mContext;
     private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
-    private IPhotoUIStatusListener mPresenter;
     private ShutterButton mShutter;
     private CaptureLayoutHelper mCaptureLayoutHelper;
     private BottomBar mBottomBar;
@@ -59,7 +58,6 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
                     ButtonManager buttonManager = mActivity.getButtonManager();
 //                    buttonManager.disableCameraButtonAndBlock();
                     Log.d(TAG, "Start to switch camera. cameraId=" + state);
-                    mPresenter.switchCamera();
                 }
             };
 
@@ -108,7 +106,6 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         mSurface = surface;
-        mPresenter.onPreviewUIReady(surface, width, height);
     }
 
     @Override
@@ -130,10 +127,6 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
         mTextureView.setAspectRatio(width, height);
     }
 
-    public void setPresenter(IPhotoUIStatusListener presenter) {
-        mPresenter = presenter;
-    }
-
     @Override
     public void onShutterButtonFocus(boolean pressed) {
 
@@ -141,8 +134,8 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
 
     @Override
     public void onShutterButtonClick() {
-        mPresenter.onShutterButtonClick();
     }
+
 
     @Override
     public void onShutterButtonLongPressed() {
@@ -153,7 +146,6 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.camera_switch:
-                mPresenter.switchCamera();
                 break;
         }
     }
@@ -213,6 +205,10 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener, ShutterB
 
     public SurfaceTexture getSurfaceTexture() {
         return mSurface;
+    }
+
+    public void addShutterListener(ShutterButton.OnShutterButtonListener listener) {
+        mShutter.addOnShutterButtonListener(listener);
     }
 
     public interface NonDecorWindowSizeChangedListener {

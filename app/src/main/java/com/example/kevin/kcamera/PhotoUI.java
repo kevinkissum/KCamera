@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
-import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -30,6 +29,7 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private StickyBottomCaptureLayout mStickyBottomCaptureLayout;
     private MultiToggleImageButton mSwitchCamera;
     private CameraActivity mActivity;
+    private float mAspectRatio;
 
 
     public PhotoUI(CameraActivity activity, MainActivityLayout rootView) {
@@ -77,5 +77,22 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
 
     }
 
+    public void updatePreviewAspectRatio(float aspectRatio) {
+        if (aspectRatio <= 0) {
+            Log.e(TAG, "Invalid aspect ratio: " + aspectRatio);
+            return;
+        }
+        if (aspectRatio < 1f) {
+            aspectRatio = 1f / aspectRatio;
+        }
+
+//        updateUI(aspectRatio);
+
+        if (mAspectRatio != aspectRatio) {
+            mAspectRatio = aspectRatio;
+            // Update transform matrix with the new aspect ratio.
+//            mController.updatePreviewAspectRatio(mAspectRatio);
+        }
+    }
 }
 

@@ -1,5 +1,6 @@
 package com.example.kevin.kcamera;
 
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.example.kevin.kcamera.Interface.ModuleManager;
@@ -15,6 +16,7 @@ public class ModuleManagerImpl implements ModuleManager {
 
     @Override
     public void registerModule(ModuleAgent agent) {
+        Log.v("kk", "registerModule >>>>>>>>>>>>>>>>>>>>>> = " );
         if (agent == null) {
             throw new NullPointerException("Registering a null ModuleAgent.");
         }
@@ -75,5 +77,6 @@ public class ModuleManagerImpl implements ModuleManager {
         if (agent == null) {
             return mRegisteredModuleAgents.get(mDefaultModuleId);
         }
-        return agent;    }
+        return agent;
+    }
 }

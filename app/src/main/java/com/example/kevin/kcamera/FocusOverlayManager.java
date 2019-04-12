@@ -83,6 +83,50 @@ public class FocusOverlayManager implements PreviewStatusListener.PreviewAreaCha
     private final Rect mPreviewRect = new Rect(0, 0, 0, 0);
     private boolean mFocusLocked;
 
+    public void removeMessages() {
+
+    }
+
+    public void onAutoFocus(boolean focused, boolean shutterButtonPressed) {
+        if (mState == STATE_FOCUSING_SNAP_ON_FINISH) {
+            // Take the picture no matter focus succeeds or fails. No need
+            // to play the AF sound if we're about to play the shutter
+            // sound.
+            if (focused) {
+                mState = STATE_SUCCESS;
+            } else {
+                mState = STATE_FAIL;
+            }
+            capture();
+        } else if (mState == STATE_FOCUSING) {
+            // This happens when (1) user is half-pressing the focus key or
+            // (2) touch focus is triggered. Play the focus tone. Do not
+            // take the picture now.
+            if (focused) {
+                mState = STATE_SUCCESS;
+            } else {
+                mState = STATE_FAIL;
+            }
+            // If this is triggered by touch focus, cancel focus after a
+            // while.
+            if (mFocusArea != null) {
+                mFocusLocked = true;
+//                mHandler.sendEmptyMessageDelayed(RESET_TOUCH_FOCUS, RESET_TOUCH_FOCUS_DELAY_MILLIS);
+            }
+            if (shutterButtonPressed) {
+                // Lock AE & AWB so users can half-press shutter and recompose.
+//                lockAeAwbIfNeeded();
+            }
+        } else if (mState == STATE_IDLE) {
+            // User has released the focus key before focus completes.
+            // Do nothing.
+        }
+    }
+
+    public void onPreviewStopped() {
+        mState = STATE_IDLE;
+    }
+
     /**
      * TODO: Refactor this so that we either don't need a handler or make
      * mListener not be the activity.
@@ -183,7 +227,7 @@ public class FocusOverlayManager implements PreviewStatusListener.PreviewAreaCha
 
     public void focusAndCapture(CameraCapabilities.FocusMode currentFocusMode) {
         if (!mInitialized) {
-            return;
+//            return;
         }
 
         if (!needAutoFocusCall(currentFocusMode)) {

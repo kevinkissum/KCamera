@@ -13,12 +13,32 @@ import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class CameraUtil {
 
     private static final String TAG = "CameraUtil";
 
+    private CameraUtil(Context context) {
+        mImageFileNamer = new ImageFileNamer(
+                context.getString(R.string.image_file_name_format));
+    }
+
+    private static class Singleton {
+        private static final CameraUtil INSTANCE = new CameraUtil(
+                AndroidContext.instance().get());
+    }
+
+    /**
+     * Thread safe CameraUtil instance.
+     */
+    public static CameraUtil instance() {
+        return Singleton.INSTANCE;
+    }
+
+    private final ImageFileNamer mImageFileNamer;
     private static final double ASPECT_RATIO_TOLERANCE = 0.05;
     public static final Rational ASPECT_RATIO_16x9 = new Rational(16, 9);
     public static final Rational ASPECT_RATIO_4x3 = new Rational(4, 3);
@@ -32,6 +52,12 @@ public class CameraUtil {
                     Toast.makeText(activity, text, Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    public String createJpegName(long dateTaken) {
+        synchronized (mImageFileNamer) {
+            return mImageFileNamer.generateName(dateTaken);
         }
     }
 
@@ -202,4 +228,46 @@ public class CameraUtil {
         windowManager.getDefaultDisplay().getSize(res);
         return new com.example.kevin.kcamera.Size(res);
     }
+
+    public static int getImageRotation(int sensorOrientation,
+                                       int deviceOrientation,
+                                       boolean isFrontCamera) {
+        // The sensor of front camera faces in the opposite direction from back camera.
+        if (isFrontCamera) {
+            deviceOrientation = (360 - deviceOrientation) % 360;
+        }
+        return (sensorOrientation + deviceOrientation) % 360;
+    }
+
+    private static class ImageFileNamer {
+        private final SimpleDateFormat mFormat;
+
+        // The date (in milliseconds) used to generate the last name.
+        private long mLastDate;
+
+        // Number of names generated for the same second.
+        private int mSameSecondCount;
+
+        public ImageFileNamer(String format) {
+            mFormat = new SimpleDateFormat(format);
+        }
+
+        public String generateName(long dateTaken) {
+            Date date = new Date(dateTaken);
+            String result = mFormat.format(date);
+
+            // If the last name was generated for the same second,
+            // we append _1, _2, etc to the name.
+            if (dateTaken / 1000 == mLastDate / 1000) {
+                mSameSecondCount++;
+                result += "_" + mSameSecondCount;
+            } else {
+                mLastDate = dateTaken;
+                mSameSecondCount = 0;
+            }
+
+            return result;
+        }
+    }
+
 }

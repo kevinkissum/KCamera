@@ -15,6 +15,8 @@ import android.util.Log;
 import android.util.LruCache;
 
 
+import com.example.kevin.kcamera.Ex.exif.ExifInterface;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -75,6 +77,147 @@ public class Storage {
             Log.i(TAG, "Fail to access external storage", e);
         }
         return UNKNOWN_SIZE;
+    }
+
+    public static Uri addImage(ContentResolver resolver, String title, long date,
+                               Location location, int orientation, ExifInterface exif, byte[] jpeg, int width,
+                               int height) throws IOException {
+
+        return addImage(resolver, title, date, location, orientation, exif, jpeg, width, height,
+                FilmstripItemData.MIME_TYPE_JPEG);
+    }
+
+    public static Uri addImage(ContentResolver resolver, String title,
+                               long date, Location location, int orientation, ExifInterface exif, byte[] data,
+                               int width, int height, String mimeType) throws IOException {
+        String path = generateFilepath(title, mimeType);
+        long fileLength = writeFile(path, data, exif);
+        if (fileLength >= 0) {
+            return addImageToMediaStore(resolver, title, date, location, orientation, fileLength,
+                    path, width, height, mimeType);
+        }
+        return null;
+    }
+
+    public static Uri addImageToMediaStore(ContentResolver resolver, String title, long date,
+                                           Location location, int orientation, long jpegLength, String path, int width, int height,
+                                           String mimeType) {
+        // Insert into MediaStore.
+        ContentValues values =
+                getContentValuesForData(title, date, location, orientation, jpegLength, path, width,
+                        height, mimeType);
+
+        Uri uri = null;
+        try {
+            uri = resolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values);
+        } catch (Throwable th)  {
+            // This can happen when the external volume is already mounted, but
+            // MediaScanner has not notify MediaProvider to add that volume.
+            // The picture is still safe and MediaScanner will find it and
+            // insert it into MediaProvider. The only problem is that the user
+            // cannot click the thumbnail to review the picture.
+            Log.e(TAG, "Failed to write MediaStore" + th);
+        }
+        return uri;
+    }
+
+    // Get a ContentValues object for the given photo data
+    public static ContentValues getContentValuesForData(String title,
+                                                        long date, Location location, int orientation, long jpegLength,
+                                                        String path, int width, int height, String mimeType) {
+
+        File file = new File(path);
+        long dateModifiedSeconds = TimeUnit.MILLISECONDS.toSeconds(file.lastModified());
+
+        ContentValues values = new ContentValues(11);
+        values.put(ImageColumns.TITLE, title);
+        values.put(ImageColumns.DISPLAY_NAME, title + JPEG_POSTFIX);
+        values.put(ImageColumns.DATE_TAKEN, date);
+        values.put(ImageColumns.MIME_TYPE, mimeType);
+        values.put(ImageColumns.DATE_MODIFIED, dateModifiedSeconds);
+        // Clockwise rotation in degrees. 0, 90, 180, or 270.
+        values.put(ImageColumns.ORIENTATION, orientation);
+        values.put(ImageColumns.DATA, path);
+        values.put(ImageColumns.SIZE, jpegLength);
+
+        setImageSize(values, width, height);
+
+        if (location != null) {
+            values.put(ImageColumns.LATITUDE, location.getLatitude());
+            values.put(ImageColumns.LONGITUDE, location.getLongitude());
+        }
+        return values;
+    }
+
+    private static void setImageSize(ContentValues values, int width, int height) {
+        // The two fields are available since ICS but got published in JB
+        if (ApiHelper.HAS_MEDIA_COLUMNS_WIDTH_AND_HEIGHT) {
+            values.put(MediaColumns.WIDTH, width);
+            values.put(MediaColumns.HEIGHT, height);
+        }
+    }
+
+    private static String generateFilepath(String title, String mimeType) {
+        return generateFilepath(DIRECTORY, title, mimeType);
+    }
+
+    public static String generateFilepath(String directory, String title, String mimeType) {
+        String extension = null;
+        if (FilmstripItemData.MIME_TYPE_JPEG.equals(mimeType)) {
+            extension = JPEG_POSTFIX;
+        } else if (FilmstripItemData.MIME_TYPE_GIF.equals(mimeType)) {
+            extension = GIF_POSTFIX;
+        } else {
+            throw new IllegalArgumentException("Invalid mimeType: " + mimeType);
+        }
+        return (new File(directory, title + extension)).getAbsolutePath();
+    }
+
+    private static long writeFile(String path, byte[] data) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(path);
+            out.write(data);
+            return data.length;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to write data", e);
+        } finally {
+            try {
+                out.close();
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to close file after write", e);
+            }
+        }
+        return -1;
+    }
+
+    public static long writeFile(String path, byte[] jpeg, ExifInterface exif) throws IOException {
+        if (!createDirectoryIfNeeded(path)) {
+            Log.e(TAG, "Failed to create parent directory for file: " + path);
+            return -1;
+        }
+        if (exif != null) {
+            exif.writeExif(jpeg, path);
+            File f = new File(path);
+            return f.length();
+        } else {
+            return writeFile(path, jpeg);
+        }
+//        return -1;
+    }
+
+    private static boolean createDirectoryIfNeeded(String filePath) {
+        File parentFile = new File(filePath).getParentFile();
+
+        // If the parent exists, return 'true' if it is a directory. If it's a
+        // file, return 'false'.
+        if (parentFile.exists()) {
+            return parentFile.isDirectory();
+        }
+
+        // If the parent does not exists, attempt to create it and return
+        // whether creating it succeeded.
+        return parentFile.mkdirs();
     }
 
 
