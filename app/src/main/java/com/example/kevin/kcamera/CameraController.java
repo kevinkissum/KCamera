@@ -22,6 +22,9 @@ import android.view.Surface;
 
 import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
 import com.example.kevin.kcamera.Ex.CameraAgent;
+import com.example.kevin.kcamera.Ex.CameraDeviceInfo;
+import com.example.kevin.kcamera.Ex.CameraExceptionHandler;
+import com.example.kevin.kcamera.Interface.CameraProvider;
 
 import java.util.Comparator;
 
@@ -29,7 +32,7 @@ import static com.example.kevin.kcamera.CameraStates.STATE_PREVIEW;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_PRECAPTURE;
 
-public class CameraController implements CameraAgent.CameraOpenCallback {
+public class CameraController implements CameraAgent.CameraOpenCallback , CameraProvider {
 
     public static final String TAG = "CameraController";
 
@@ -223,6 +226,11 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
         mCameraAgent = cameraAgent;
     }
 
+    @Override
+    public void requestCamera(int id) {
+
+    }
+
     public void requestCamera(int id, boolean useNewApi) {
         Log.d(TAG, "requestCamera " + id );
         if (mRequestingCameraId == id) {
@@ -247,6 +255,56 @@ public class CameraController implements CameraAgent.CameraOpenCallback {
             mCameraProxy.reconnect(mCallbackHandler, this);
             mCameraProxy = null;
         }*/
+    }
+
+    @Override
+    public boolean waitingForCamera() {
+        return false;
+    }
+
+    @Override
+    public void releaseCamera(int id) {
+
+    }
+
+    @Override
+    public void setCameraExceptionHandler(CameraExceptionHandler exceptionHandler) {
+
+    }
+
+    @Override
+    public CameraDeviceInfo.Characteristics getCharacteristics(int cameraId) {
+        return null;
+    }
+
+    @Override
+    public CameraId getCurrentCameraId() {
+        return null;
+    }
+
+    @Override
+    public int getNumberOfCameras() {
+        return 0;
+    }
+
+    @Override
+    public int getFirstBackCameraId() {
+        return 0;
+    }
+
+    @Override
+    public int getFirstFrontCameraId() {
+        return 0;
+    }
+
+    @Override
+    public boolean isFrontFacingCamera(int id) {
+        return false;
+    }
+
+    @Override
+    public boolean isBackFacingCamera(int id) {
+        return false;
     }
 
     private void checkAndOpenCamera(CameraAgent cameraAgent,

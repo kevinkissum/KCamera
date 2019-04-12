@@ -19,11 +19,20 @@ import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.PhotoController;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 public class PhotoModule extends CameraModule implements PhotoController {
 
 
     private static final String TAG = "CAM_PhotoModule";
+
+    protected CameraCapabilities mCameraCapabilities;
+    private boolean mFocusAreaSupported;
+    private boolean mMeteringAreaSupported;
+    private boolean mAeLockSupported;
+    private boolean mAwbLockSupported;
+    private boolean mContinuousFocusSupported;
+
     private CameraActivity mActivity;
     private Context mContext;
     private PhotoUI mUI;
@@ -160,7 +169,64 @@ public class PhotoModule extends CameraModule implements PhotoController {
             Log.w(TAG, "attempting to set picture size without caemra device");
             return;
         }
+        List<Size> supported = Size.convert(mCameraCapabilities.getSupportedPhotoSizes());
+        CameraPictureSizesCacher.updateSizesForCamera(mAppController.getAndroidContext(),
+                mCameraProxy.getCameraId(), supported);
 
+//        OneCamera.Facing cameraFacing =
+//                isCameraFrontFacing() ? OneCamera.Facing.FRONT : OneCamera.Facing.BACK;
+        Size pictureSize;
+//        try {
+//            pictureSize = mAppController.getResolutionSetting().getPictureSize(
+//                    mAppController.getCameraProvider().getCurrentCameraId(),
+//                    cameraFacing);
+//        } catch (OneCameraAccessException ex) {
+//            mAppController.getFatalErrorHandler().onGenericCameraAccessFailure();
+//            return;
+//        }
+
+
+//        final List<Size> supportedPictureSizes =
+//                ResolutionUtil.filterBlackListedSizes(
+//                        cameraCharacteristics.getSupportedPictureSizes(ImageFormat.JPEG),
+//                        blacklist);
+//
+//
+//        mCameraSettings.setPhotoSize(pictureSize.toPortabilitySize());
+//
+//        if (ApiHelper.IS_NEXUS_5) {
+//            if (ResolutionUtil.NEXUS_5_LARGE_16_BY_9.equals(pictureSize)) {
+//                mShouldResizeTo16x9 = true;
+//            } else {
+//                mShouldResizeTo16x9 = false;
+//            }
+//        }
+//
+//        // Set a preview size that is closest to the viewfinder height and has
+//        // the right aspect ratio.
+//        List<Size> sizes = Size.convert(mCameraCapabilities.getSupportedPreviewSizes());
+//        Size optimalSize = CameraUtil.getOptimalPreviewSize(sizes,
+//                (double) pictureSize.width() / pictureSize.height());
+//        Size original = new Size(mCameraSettings.getCurrentPreviewSize());
+//        if (!optimalSize.equals(original)) {
+//            Log.v(TAG, "setting preview size. optimal: " + optimalSize + "original: " + original);
+//            mCameraSettings.setPreviewSize(optimalSize.toPortabilitySize());
+//
+//            mCameraProxy.applySettings(mCameraSettings);
+//            mCameraSettings = mCameraProxy.getSettings();
+//        }
+//
+//        if (optimalSize.width() != 0 && optimalSize.height() != 0) {
+//            Log.v(TAG, "updating aspect ratio");
+//            mUI.updatePreviewAspectRatio((float) optimalSize.width()
+//                    / (float) optimalSize.height());
+//        }
+//        Log.d(TAG, "Preview size is " + optimalSize);
+    }
+
+    private boolean isCameraFrontFacing() {
+        return mAppController.getCameraProvider().getCharacteristics(mCameraId)
+                .isFacingFront();
     }
 
     public void onShutterButtonClick() {
@@ -275,11 +341,27 @@ public class PhotoModule extends CameraModule implements PhotoController {
         if (mPaused) {
             return;
         }
+        initializeCapabilities();
         mCameraProxy = cameraProxy;
         mCameraSettings = mCameraProxy.getSettings();
         startPreview();
 //        onCameraOpened();
 
+    }
+
+    private void initializeCapabilities() {
+        mCameraCapabilities = mCameraProxy.getCapabilities();
+        mFocusAreaSupported = mCameraCapabilities
+                .supports(CameraCapabilities.Feature.FOCUS_AREA);
+        mMeteringAreaSupported = mCameraCapabilities
+                .supports(CameraCapabilities.Feature.METERING_AREA);
+        mAeLockSupported = mCameraCapabilities
+                .supports(CameraCapabilities.Feature.AUTO_EXPOSURE_LOCK);
+        mAwbLockSupported = mCameraCapabilities
+                .supports(CameraCapabilities.Feature.AUTO_WHITE_BALANCE_LOCK);
+        mContinuousFocusSupported = mCameraCapabilities
+                .supports(CameraCapabilities.FocusMode.CONTINUOUS_PICTURE);
+//        mMaxRatio = mCameraCapabilities.getMaxZoomRatio();
     }
 
     // Snapshots can only be taken after this is called. It should be called

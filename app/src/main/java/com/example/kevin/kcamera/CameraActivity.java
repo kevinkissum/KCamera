@@ -20,6 +20,7 @@ import android.view.Window;
 
 import com.example.kevin.kcamera.Ex.AndroidCamera2AgentImpl;
 import com.example.kevin.kcamera.Ex.CameraAgent;
+import com.example.kevin.kcamera.Interface.CameraServices;
 import com.example.kevin.kcamera.Interface.OnStorageUpdateDoneListener;
 import com.example.kevin.kcamera.Presenter.PhotoUI2ModulePresenter;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -162,6 +163,11 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
 
     }
 
+    @Override
+    public CameraServices getServices() {
+        return null;
+    }
+
     public MainActivityLayout getModuleLayoutRoot() {
         return mRootView;
     }
@@ -301,6 +307,11 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
 
     public CameraController getCameraProvider() {
         return mCameraController;
+    }
+
+    @Override
+    public Context getAndroidContext() {
+        return getApplicationContext();
     }
 
     public CameraAppUI getCameraAppUI() {

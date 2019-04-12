@@ -1,5 +1,7 @@
 package com.example.kevin.kcamera.Interface;
 
+import android.content.Context;
+
 import com.example.kevin.kcamera.ButtonManager;
 
 public interface AppController {
@@ -13,4 +15,13 @@ public interface AppController {
     void setShutterEnabled(boolean enabled);
 
     void onPreviewStarted();
+
+    public CameraServices getServices();
+
+    public CameraProvider getCameraProvider();
+
+
+    public Context getAndroidContext();
+
+
 }

@@ -2,6 +2,7 @@ package com.example.kevin.kcamera.Ex;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -21,7 +22,6 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -32,6 +32,7 @@ import java.util.Set;
 
 public class AndroidCamera2AgentImpl extends CameraAgent {
 
+    public static final String TAG = "CAM_AndCam2AgntImp";
 
     private final HandlerThread mCameraHandlerThread;
     private final Camera2Handler mCameraHandler;
@@ -42,6 +43,7 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
     private DispatchThread mDispatchThread;
     private CameraStateHolder mCameraState;
     private Camera2RequestSettingsSet mPersistentSettings;
+    private boolean mNeedThumb;
 
     public AndroidCamera2AgentImpl(Context context) {
         mCameraHandlerThread = new HandlerThread("Camera2 Handler Thread");
@@ -301,6 +303,35 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
         public Handler getCameraHandler() {
             return AndroidCamera2AgentImpl.this.getCameraHandler();
         }
+
+        @Override
+        public CameraCapabilities getCapabilities() {
+            return mCapabilities;
+        }
+
+        @Override
+        public CameraStateHolder getCameraState() {
+            return mCameraState;
+        }
+
+        @Override
+        public boolean applySettings(CameraSettings settings) {
+            if (settings == null) {
+                Log.w(TAG, "null parameters in applySettings()");
+                return false;
+            }
+            if (!(settings instanceof AndroidCamera2Settings)) {
+                Log.e(TAG, "Provided settings not compatible with the backing framework API");
+                return false;
+            }
+
+            // Wait for any state that isn't OPENED
+            if (applySettingsHelper(settings, ~AndroidCamera2StateHolder.CAMERA_UNOPENED)) {
+                mLastSettings = settings;
+                return true;
+            }
+            return false;
+        }
     }
 
     protected static abstract class CaptureAvailableListener
@@ -417,6 +448,40 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
                         }
                         mCameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, this);
 
+                        break;
+                    }
+
+                    case CameraActions.SET_PREVIEW_TEXTURE_ASYNC: {
+                        setPreviewTexture((SurfaceTexture) msg.obj);
+                        break;
+                    }
+
+                    case CameraActions.APPLY_SETTINGS: {
+                        AndroidCamera2Settings settings = (AndroidCamera2Settings) msg.obj;
+                        applyToRequest(settings);
+                        break;
+                    }
+
+                    case CameraActions.START_PREVIEW_ASYNC: {
+                        if (mCameraState.getState() !=
+                                AndroidCamera2StateHolder.CAMERA_PREVIEW_READY) {
+                            // TODO: Provide better feedback here?
+                            Log.w(TAG, "Refusing to start preview at inappropriate time");
+                            break;
+                        }
+
+                        mOneshotPreviewingCallback = (CameraStartPreviewCallback) msg.obj;
+                        changeState(AndroidCamera2StateHolder.CAMERA_PREVIEW_ACTIVE);
+                        try {
+                            Log.w("kk", ">>>>>>>>>>. start preview");
+                            mSession.setRepeatingRequest(
+                                    mPersistentSettings.createRequest(mCamera,
+                                            CameraDevice.TEMPLATE_PREVIEW, mPreviewSurface),
+                                    /*listener*/mCameraResultStateCallback, /*handler*/this);
+                        } catch(CameraAccessException ex) {
+                            Log.w(TAG, "Unable to start preview", ex);
+                            changeState(AndroidCamera2StateHolder.CAMERA_PREVIEW_READY);
+                        }
                         break;
                     }
                 }
@@ -650,6 +715,30 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
                         Log.e(TAG, "Capture attempt failed with reason " + failure.getReason());
                     }};
 
+        // This callback monitors our camera session (i.e. our transition into and out of preview).
+        protected CameraCaptureSession.StateCallback mCameraPreviewStateCallback =
+                new CameraCaptureSession.StateCallback() {
+                    @Override
+                    public void onConfigured(CameraCaptureSession session) {
+                        mSession = session;
+                        changeState(AndroidCamera2StateHolder.CAMERA_PREVIEW_READY);
+                    }
+
+                    @Override
+                    public void onConfigureFailed(CameraCaptureSession session) {
+                        // TODO: Invoke a callback
+                        Log.e(TAG, "Failed to configure the camera for capture");
+                    }
+
+                    @Override
+                    public void onActive(CameraCaptureSession session) {
+                        if (mOneshotPreviewingCallback != null) {
+                            // The session is up and processing preview requests. Inform the caller.
+                            mOneshotPreviewingCallback.onPreviewStarted();
+                            mOneshotPreviewingCallback = null;
+                        }
+                    }};
+
         protected void changeState(int newState) {
             if (mCameraState.getState() != newState) {
                 mCameraState.setState(newState);
@@ -660,6 +749,109 @@ public class AndroidCamera2AgentImpl extends CameraAgent {
             }
         }
 
+        /**
+         * Simply propagates settings from provided {@link CameraSettings}
+         * object to our {@link CaptureRequest.Builder} for use in captures.
+         * <p>Most conversions to match the API 2 formats are performed by
+         * {@link AndroidCamera2Capabilities.IntegralStringifier}; otherwise
+         * any final adjustments are done here before updating the builder.</p>
+         *
+         * @param settings The new/updated settings
+         */
+        private void applyToRequest(AndroidCamera2Settings settings) {
+            // TODO: If invoked when in PREVIEW_READY state, a new preview size will not take effect
+
+            mPersistentSettings.union(settings.getRequestSettings());
+            mPreviewSize = settings.getCurrentPreviewSize();
+            mPhotoSize = settings.getCurrentPhotoSize();
+            mThumbnailSize = settings.getExifThumbnailSize();
+//            mNeedThumb = settings.getNeedThumbCallBack();
+
+            if (mCameraState.getState() >= AndroidCamera2StateHolder.CAMERA_PREVIEW_ACTIVE) {
+                // If we're already previewing, reflect most settings immediately
+                try {
+                    mSession.setRepeatingRequest(
+                            mPersistentSettings.createRequest(mCamera,
+                                    CameraDevice.TEMPLATE_PREVIEW, mPreviewSurface),
+                            /*listener*/mCameraResultStateCallback, /*handler*/this);
+                } catch (CameraAccessException ex) {
+                    Log.e(TAG, "Failed to apply updated request settings", ex);
+                }
+            } else if (mCameraState.getState() < AndroidCamera2StateHolder.CAMERA_PREVIEW_READY) {
+                // If we're already ready to preview, this doesn't regress our state
+                changeState(AndroidCamera2StateHolder.CAMERA_CONFIGURED);
+            }
+        }
+
+        private void setPreviewTexture(SurfaceTexture surfaceTexture) {
+            // SPRD
+            long start = System.currentTimeMillis();
+
+            // TODO: Must be called after providing a .*Settings populated with sizes
+            // TODO: We don't technically offer a selection of sizes tailored to SurfaceTextures!
+
+            // TODO: Handle this error condition with a callback or exception
+            if (mCameraState.getState() < AndroidCamera2StateHolder.CAMERA_CONFIGURED) {
+                Log.w(TAG, "Ignoring texture setting at inappropriate time " + mCameraState.getState());
+//                return;
+            }
+
+            // Avoid initializing another capture session unless we absolutely have to
+            if (surfaceTexture == mPreviewTexture) {
+                Log.i(TAG, "Optimizing out redundant preview texture setting");
+                return;
+            }
+
+            if (mSession != null) {
+                closePreviewSession();
+            }
+
+            mPreviewTexture = surfaceTexture;
+            surfaceTexture.setDefaultBufferSize(mPreviewSize.width(), mPreviewSize.height());
+
+            if (mPreviewSurface != null) {
+                mPreviewSurface.release();
+            }
+            mPreviewSurface = new Surface(surfaceTexture);
+
+            if (mCaptureReader != null) {
+                mCaptureReader.close();
+            }
+            mCaptureReader = ImageReader.newInstance(
+                    mPhotoSize.width(), mPhotoSize.height(), ImageFormat.JPEG, 1);
+            if (mThumbnailReader != null) {
+                mThumbnailReader.close();
+            }
+            try {
+                if (mNeedThumb) {
+                    mThumbnailReader = ImageReader.newInstance(
+                            mThumbnailSize.width(), mThumbnailSize.height(), ImageFormat.YUV_420_888, 1);
+                    mCamera.createCaptureSession(
+                            Arrays.asList(mPreviewSurface, mCaptureReader.getSurface(), mThumbnailReader.getSurface()),
+                            mCameraPreviewStateCallback, this);
+                } else {
+                    mCamera.createCaptureSession(
+                            Arrays.asList(mPreviewSurface, mCaptureReader.getSurface()),
+                            mCameraPreviewStateCallback, this);
+                }
+            } catch (CameraAccessException ex) {
+                Log.e(TAG, "Failed to create camera capture session", ex);
+            }
+
+            // SPRD
+            long end = System.currentTimeMillis();
+            Log.i(TAG, "setPreviewTexture cost " + (end - start));
+        }
+
+        protected void closePreviewSession() {
+            try {
+                mSession.abortCaptures();
+                mSession = null;
+            } catch (CameraAccessException ex) {
+                Log.e(TAG, "Failed to close existing camera capture session", ex);
+            }
+            changeState(AndroidCamera2StateHolder.CAMERA_CONFIGURED);
+        }
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.example.kevin.kcamera.Abstract;
 
+import com.example.kevin.kcamera.Interface.AppController;
+import com.example.kevin.kcamera.Interface.CameraProvider;
+import com.example.kevin.kcamera.Interface.CameraServices;
 import com.example.kevin.kcamera.Interface.ModuleController;
 
 public abstract class CameraModule implements ModuleController {
@@ -11,5 +14,15 @@ public abstract class CameraModule implements ModuleController {
     public static final int SNAPSHOT_IN_PROGRESS = 3;
     // Switching between cameras.
     public static final int SWITCHING_CAMERA = 4;
+
+//    private final CameraServices mServices;
+//    private final CameraProvider mCameraProvider;
+//    protected float mMinRatio = 1.0f;
+//    protected float mMaxRatio;
+//
+//    public CameraModule(AppController app) {
+//        mServices = app.getServices();
+//        mCameraProvider = app.getCameraProvider();
+//    }
 
 }
