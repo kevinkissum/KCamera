@@ -1,7 +1,12 @@
 package com.example.kevin.kcamera;
 
 import android.content.Context;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -25,6 +30,7 @@ public class PhotoModule extends CameraModule implements PhotoController {
 
 
     private static final String TAG = "CAM_PhotoModule";
+    public static final int DEFAULT_CAPTURE_PIXELS = 1920 * 1080;
 
     protected CameraCapabilities mCameraCapabilities;
     private boolean mFocusAreaSupported;
@@ -49,6 +55,9 @@ public class PhotoModule extends CameraModule implements PhotoController {
     private CameraCapabilities.SceneMode mSceneMode;
     private CameraAgent.CameraProxy mCameraProxy;
     private final Handler mHandler = new MainHandler(this);
+    private boolean mShouldResizeTo16x9;
+    private int mCameraPreviewWidth;
+    private int mCameraPreviewHeight;
 
 
     private final Runnable mDoSnapRunnable = new Runnable() {
@@ -57,7 +66,6 @@ public class PhotoModule extends CameraModule implements PhotoController {
             onShutterButtonClick();
         }
     };
-
     public PhotoModule(CameraActivity activity, Handler handler) {
         mContext = activity.getApplicationContext();
         mActivity = activity;
@@ -169,60 +177,74 @@ public class PhotoModule extends CameraModule implements PhotoController {
             Log.w(TAG, "attempting to set picture size without caemra device");
             return;
         }
-        List<Size> supported = Size.convert(mCameraCapabilities.getSupportedPhotoSizes());
+        List<Size> sizesPhoto = Size.convert(mCameraCapabilities.getSupportedPhotoSizes());
+        if (!findBestPreviewSize(sizesPhoto, true, true)) {
+            Log.w(TAG, "No 16:9 ratio preview size supported.");
+            if (!findBestPreviewSize(sizesPhoto, false, true)) {
+                Log.w(TAG, "Can't find a supported preview size smaller than 960x720.");
+                findBestPreviewSize(sizesPhoto, false, false);
+            }
+        }
+
         CameraPictureSizesCacher.updateSizesForCamera(mAppController.getAndroidContext(),
-                mCameraProxy.getCameraId(), supported);
-
-//        OneCamera.Facing cameraFacing =
-//                isCameraFrontFacing() ? OneCamera.Facing.FRONT : OneCamera.Facing.BACK;
-        Size pictureSize;
-//        try {
-//            pictureSize = mAppController.getResolutionSetting().getPictureSize(
-//                    mAppController.getCameraProvider().getCurrentCameraId(),
-//                    cameraFacing);
-//        } catch (OneCameraAccessException ex) {
-//            mAppController.getFatalErrorHandler().onGenericCameraAccessFailure();
-//            return;
-//        }
+                mCameraProxy.getCameraId(), sizesPhoto);
 
 
-//        final List<Size> supportedPictureSizes =
-//                ResolutionUtil.filterBlackListedSizes(
-//                        cameraCharacteristics.getSupportedPictureSizes(ImageFormat.JPEG),
-//                        blacklist);
-//
-//
-//        mCameraSettings.setPhotoSize(pictureSize.toPortabilitySize());
-//
-//        if (ApiHelper.IS_NEXUS_5) {
-//            if (ResolutionUtil.NEXUS_5_LARGE_16_BY_9.equals(pictureSize)) {
-//                mShouldResizeTo16x9 = true;
-//            } else {
-//                mShouldResizeTo16x9 = false;
-//            }
-//        }
-//
-//        // Set a preview size that is closest to the viewfinder height and has
-//        // the right aspect ratio.
-//        List<Size> sizes = Size.convert(mCameraCapabilities.getSupportedPreviewSizes());
-//        Size optimalSize = CameraUtil.getOptimalPreviewSize(sizes,
-//                (double) pictureSize.width() / pictureSize.height());
-//        Size original = new Size(mCameraSettings.getCurrentPreviewSize());
-//        if (!optimalSize.equals(original)) {
-//            Log.v(TAG, "setting preview size. optimal: " + optimalSize + "original: " + original);
-//            mCameraSettings.setPreviewSize(optimalSize.toPortabilitySize());
-//
-//            mCameraProxy.applySettings(mCameraSettings);
-//            mCameraSettings = mCameraProxy.getSettings();
-//        }
-//
-//        if (optimalSize.width() != 0 && optimalSize.height() != 0) {
-//            Log.v(TAG, "updating aspect ratio");
+
+        mCameraSettings.setPhotoSize(new com.example.kevin.kcamera.Ex.Size(mCameraPreviewWidth, mCameraPreviewHeight));
+
+
+
+        // Set a preview size that is closest to the viewfinder height and has
+        // the right aspect ratio.
+        List<Size> sizesPreview = Size.convert(mCameraCapabilities.getSupportedPreviewSizes());
+        Size optimalSize = CameraUtil.getOptimalPreviewSize(sizesPreview,
+                (double) mCameraPreviewWidth / mCameraPreviewHeight);
+        Size original = new Size(mCameraSettings.getCurrentPreviewSize());
+        if (!optimalSize.equals(original)) {
+            Log.v(TAG, "setting preview size. optimal: " + optimalSize + "original: " + original);
+            mCameraSettings.setPreviewSize(optimalSize.toPortabilitySize());
+
+            mCameraProxy.applySettings(mCameraSettings);
+            mCameraSettings = mCameraProxy.getSettings();
+        }
+
+        if (optimalSize.width() != 0 && optimalSize.height() != 0) {
+            Log.v(TAG, "updating aspect ratio");
 //            mUI.updatePreviewAspectRatio((float) optimalSize.width()
 //                    / (float) optimalSize.height());
-//        }
-//        Log.d(TAG, "Preview size is " + optimalSize);
+        }
+        Log.d(TAG, "Preview size is " + optimalSize);
     }
+
+    private boolean findBestPreviewSize(List<Size> supportedSizes, boolean need16To9,
+                                        boolean needSmaller) {
+        int pixelsDiff = DEFAULT_CAPTURE_PIXELS;
+        boolean hasFound = false;
+        Size displayRealSize = CameraUtil.getDefaultDisplayRealSize();
+        float targetRation = (float)displayRealSize.getHeight() / (float)displayRealSize.getWidth() == 18/9f ? 18/9f : 16/9f;
+        for (Size size : supportedSizes) {
+            int h = size.height();
+            int w = size.width();
+            // we only want 16:9 format.
+            int d = DEFAULT_CAPTURE_PIXELS - h * w;
+            if (needSmaller && d < 0) { // no bigger preview than 960x720.
+                continue;
+            }
+            if (need16To9 &&(float)w/h != targetRation) {//SPRD:fix bug 614910 change the preview size to 16:9
+                continue;
+            }
+            d = Math.abs(d);
+            if (d < pixelsDiff) {
+                mCameraPreviewWidth = w;
+                mCameraPreviewHeight = h;
+                pixelsDiff = d;
+                hasFound = true;
+            }
+        }
+        return hasFound;
+    }
+
 
     private boolean isCameraFrontFacing() {
         return mAppController.getCameraProvider().getCharacteristics(mCameraId)
@@ -337,12 +359,12 @@ public class PhotoModule extends CameraModule implements PhotoController {
 
     @Override
     public void onCameraAvailable(CameraAgent.CameraProxy cameraProxy) {
-        Log.i(TAG, "onCameraAvailable");
+        Log.i(TAG, "onCameraAvailable " + cameraProxy);
         if (mPaused) {
             return;
         }
-        initializeCapabilities();
         mCameraProxy = cameraProxy;
+        initializeCapabilities();
         mCameraSettings = mCameraProxy.getSettings();
         startPreview();
 //        onCameraOpened();
@@ -351,16 +373,16 @@ public class PhotoModule extends CameraModule implements PhotoController {
 
     private void initializeCapabilities() {
         mCameraCapabilities = mCameraProxy.getCapabilities();
-        mFocusAreaSupported = mCameraCapabilities
-                .supports(CameraCapabilities.Feature.FOCUS_AREA);
-        mMeteringAreaSupported = mCameraCapabilities
-                .supports(CameraCapabilities.Feature.METERING_AREA);
-        mAeLockSupported = mCameraCapabilities
-                .supports(CameraCapabilities.Feature.AUTO_EXPOSURE_LOCK);
-        mAwbLockSupported = mCameraCapabilities
-                .supports(CameraCapabilities.Feature.AUTO_WHITE_BALANCE_LOCK);
-        mContinuousFocusSupported = mCameraCapabilities
-                .supports(CameraCapabilities.FocusMode.CONTINUOUS_PICTURE);
+//        mFocusAreaSupported = mCameraCapabilities
+//                .supports(CameraCapabilities.Feature.FOCUS_AREA);
+//        mMeteringAreaSupported = mCameraCapabilities
+//                .supports(CameraCapabilities.Feature.METERING_AREA);
+//        mAeLockSupported = mCameraCapabilities
+//                .supports(CameraCapabilities.Feature.AUTO_EXPOSURE_LOCK);
+//        mAwbLockSupported = mCameraCapabilities
+//                .supports(CameraCapabilities.Feature.AUTO_WHITE_BALANCE_LOCK);
+//        mContinuousFocusSupported = mCameraCapabilities
+//                .supports(CameraCapabilities.FocusMode.CONTINUOUS_PICTURE);
 //        mMaxRatio = mCameraCapabilities.getMaxZoomRatio();
     }
 

@@ -3,14 +3,9 @@ package com.example.kevin.kcamera;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.ImageFormat;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.util.Log;
 import android.util.Rational;
 import android.util.Size;
@@ -18,7 +13,6 @@ import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CameraUtil {
@@ -119,5 +113,93 @@ public class CameraUtil {
         rect.top = Math.round(rectF.top);
         rect.right = Math.round(rectF.right);
         rect.bottom = Math.round(rectF.bottom);
+    }
+
+    public static com.example.kevin.kcamera.Size getDefaultDisplayRealSize() {
+        WindowManager windowManager = AndroidServices.instance().provideWindowManager();
+        Point res = new Point();
+        Point  realRes = new Point();
+        windowManager.getDefaultDisplay().getSize(res);
+        windowManager.getDefaultDisplay().getRealSize(realRes);
+        return new com.example.kevin.kcamera.Size(realRes);
+    }
+
+    public static com.example.kevin.kcamera.Size getOptimalPreviewSize(List<com.example.kevin.kcamera.Size> sizes, double targetRatio) {
+        int optimalPickIndex = getOptimalPreviewSizeIndex(sizes, targetRatio);
+        if (optimalPickIndex == -1) {
+            return null;
+        } else {
+            return sizes.get(optimalPickIndex);
+        }    }
+
+    private static int getOptimalPreviewSizeIndex(List<com.example.kevin.kcamera.Size> sizes, double targetRatio) {
+        final double aspectRatioTolerance = 0.02;
+
+        return getOptimalPreviewSizeIndex(sizes, targetRatio, aspectRatioTolerance);    }
+
+    private static int getOptimalPreviewSizeIndex(List<com.example.kevin.kcamera.Size> previewSizes, double targetRatio, Double aspectRatioTolerance) {
+        if (previewSizes == null) {
+            return -1;
+        }
+
+        // If no particular aspect ratio tolerance is set, use the default
+        // value.
+        if (aspectRatioTolerance == null) {
+            return getOptimalPreviewSizeIndex(previewSizes, targetRatio);
+        }
+
+        int optimalSizeIndex = -1;
+        double minDiff = Double.MAX_VALUE;
+
+        // Because of bugs of overlay and layout, we sometimes will try to
+        // layout the viewfinder in the portrait orientation and thus get the
+        // wrong size of preview surface. When we change the preview size, the
+        // new overlay will be created before the old one closed, which causes
+        // an exception. For now, just get the screen size.
+        com.example.kevin.kcamera.Size defaultDisplaySize = getDefaultDisplaySize();
+        int targetHeight = Math.min(defaultDisplaySize.getWidth(), defaultDisplaySize.getHeight());
+        // Try to find an size match aspect ratio and size
+        for (int i = 0; i < previewSizes.size(); i++) {
+            com.example.kevin.kcamera.Size size = previewSizes.get(i);
+            double ratio = (double) size.getWidth() / size.getHeight();
+            if (Math.abs(ratio - targetRatio) > aspectRatioTolerance) {
+                continue;
+            }
+
+            double heightDiff = Math.abs(size.getHeight() - targetHeight);
+            if (heightDiff < minDiff) {
+                optimalSizeIndex = i;
+                minDiff = heightDiff;
+            } else if (heightDiff == minDiff) {
+                // Prefer resolutions smaller-than-display when an equally close
+                // larger-than-display resolution is available
+                if (size.getHeight() < targetHeight) {
+                    optimalSizeIndex = i;
+                    minDiff = heightDiff;
+                }
+            }
+        }
+        // Cannot find the one match the aspect ratio. This should not happen.
+        // Ignore the requirement.
+        if (optimalSizeIndex == -1) {
+            Log.w(TAG, "No preview size match the aspect ratio. available sizes: " + previewSizes);
+            minDiff = Double.MAX_VALUE;
+            for (int i = 0; i < previewSizes.size(); i++) {
+                com.example.kevin.kcamera.Size size = previewSizes.get(i);
+                if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                    optimalSizeIndex = i;
+                    minDiff = Math.abs(size.getHeight() - targetHeight);
+                }
+            }
+        }
+
+        return optimalSizeIndex;
+    }
+
+    private static com.example.kevin.kcamera.Size getDefaultDisplaySize() {
+        WindowManager windowManager = AndroidServices.instance().provideWindowManager();
+        Point res = new Point();
+        windowManager.getDefaultDisplay().getSize(res);
+        return new com.example.kevin.kcamera.Size(res);
     }
 }

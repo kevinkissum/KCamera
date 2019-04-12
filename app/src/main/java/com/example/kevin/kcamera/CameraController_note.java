@@ -2,7 +2,9 @@ package com.example.kevin.kcamera;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.ImageFormat;
+import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -13,6 +15,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -20,35 +23,32 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
-import com.example.kevin.kcamera.Ex.AndroidCamera2Settings;
-import com.example.kevin.kcamera.Ex.CameraAgent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import static com.example.kevin.kcamera.CameraStates.STATE_PREVIEW;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_LOCK;
 import static com.example.kevin.kcamera.CameraStates.STATE_WAITING_PRECAPTURE;
 
-public class CameraController_note implements CameraAgent.CameraOpenCallback {
+public class CameraController_note extends CameraDevice.StateCallback {
 
     public static final String TAG = "CameraController";
 
-    private final Handler mainHandler;
+    private Handler mainHandler;
     private int mRequestingCameraId = -1;
     private CameraManager mCameraManager;
-    private CameraAgent mCameraAgent;
 
-    private CameraAgent.CameraOpenCallback mCameraControl;
     private CameraDevice mCameraDevice;
     private SurfaceTexture mPreviewTexture;
-    private AndroidCamera2Settings mCameraSetting;
     private ImageReader mImageReader;
     private CameraActivity mActivity;
 
     private Integer mSensorOrientation;
     private Size mPreviewSize;
-    private Size mPhotoSize;
     private boolean mFlashSupported;
     private SurfaceTexture mSurfaceTexture;
     private CaptureRequest.Builder mPreviewRequestBuilder;
@@ -183,7 +183,7 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-//                    CameraUtil.showToast(mActivity, "Saved: " + mFile);
+//                    Util.showToast(mActivity, "Saved: " + mFile);
                     Log.d(TAG, "Save pic ".toString());
                     unlockFocus();
                 }
@@ -214,22 +214,27 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         }
     }
 
-    public CameraController_note(CameraActivity activity, CameraAgent cameraAgent, Handler handler, CameraAgent.CameraOpenCallback receiver) {
-        mActivity = activity;
-        mCameraManager = (CameraManager)mActivity.getSystemService(Context.CAMERA_SERVICE);
-        mainHandler = handler;
-        mCameraControl = receiver;
-        mCameraAgent = cameraAgent;
-    }
+//    public CameraController(CameraActivity activity, Handler handler, ICameraControll receiver) {
+//        mActivity = activity;
+//        mCameraManager = (CameraManager)mActivity.getSystemService(Context.CAMERA_SERVICE);
+//        mainHandler = handler;
+//        mCameraControl = receiver;
+//        mCameraSetting = new AndroidCamera2Settings();
+//    }
+
 
     public void requestCamera(int id, boolean useNewApi) {
         Log.d(TAG, "requestCamera " + id );
         if (mRequestingCameraId == id) {
             return;
         }
+
         mRequestingCameraId = id;
+
         if (mCameraDevice == null) {
-            checkAndOpenCamera(mCameraAgent, id, mainHandler, this);
+            // No camera yet.
+            setUpCameraOutputs(mSurfaceWidth, mSurfaceHeight);
+            checkAndOpenCamera(mCameraManager, id, mainHandler, this);
         } /*else if (mCameraProxy.getCameraId() != id) {
             Log.d(TAG, "different camera already opened, closing then reopening");
             // Already has camera opened, and is switching cameras and/or APIs.
@@ -248,11 +253,11 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         }*/
     }
 
-    private void checkAndOpenCamera(CameraAgent cameraAgent,
-                                    final int cameraId, Handler handler, final CameraAgent.CameraOpenCallback cb) {
+    private void checkAndOpenCamera(CameraManager cameraManager,
+                                    final int cameraId, Handler handler, final CameraDevice.StateCallback cb) {
         Log.d(TAG, "checkAndOpenCamera");
         try {
-            cameraAgent.openCamera(handler, cameraId, cb);
+            cameraManager.openCamera(cameraId + "", cb, handler);
         } catch (Exception ex) {
             handler.post(new Runnable() {
                 @Override
@@ -263,14 +268,23 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         }
     }
 
-    private void setUpCameraOutputs() {
+    private void setUpCameraOutputs(int width, int height) {
         try {
             CameraCharacteristics characteristics
                     = mCameraManager.getCameraCharacteristics(mRequestingCameraId + "");
-
+            StreamConfigurationMap map = characteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            if (map == null) {
+                return;
+            }
+            // For still image captures, we use the largest available size.
+            Size largest = Collections.max(
+                    Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
+                    new CompareSizesByArea());
             //配置流， 即setPhotoSize
-            mImageReader = ImageReader.newInstance(mPhotoSize.getWidth(), mPhotoSize.getHeight(),
+            mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
                     ImageFormat.JPEG, /*maxImages*/2);
+            Log.e(TAG, "配置流， 即setPhotoSize: " + largest.getWidth() +  " * " + largest.getHeight()) ;
             mImageReader.setOnImageAvailableListener(
                     mOnImageAvailableListener, mainHandler);
 
@@ -293,7 +307,39 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
                 default:
                     Log.e(TAG, "Display rotation is invalid: " + displayRotation);
             }
+            Point displaySize = new Point();
+            mActivity.getWindowManager().getDefaultDisplay().getSize(displaySize);
+            int rotatedPreviewWidth = width;
+            int rotatedPreviewHeight = height;
+            int maxPreviewWidth = displaySize.x;
+            int maxPreviewHeight = displaySize.y;
 
+            if (swappedDimensions) {
+                rotatedPreviewWidth = height;
+                rotatedPreviewHeight = width;
+                maxPreviewWidth = displaySize.y;
+                maxPreviewHeight = displaySize.x;
+            }
+
+            if (maxPreviewWidth > CameraStates.MAX_PREVIEW_WIDTH) {
+                maxPreviewWidth = CameraStates.MAX_PREVIEW_WIDTH;
+            }
+
+            if (maxPreviewHeight > CameraStates.MAX_PREVIEW_HEIGHT) {
+                maxPreviewHeight = CameraStates.MAX_PREVIEW_HEIGHT;
+            }
+            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                    maxPreviewHeight, largest);
+            int orientation = mActivity.getResources().getConfiguration().orientation;
+//            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                mCameraControl.changePreViewSize(
+//                        mPreviewSize.getWidth(), mPreviewSize.getHeight());
+//            } else {
+//                mCameraControl.changePreViewSize(
+//                        mPreviewSize.getHeight(), mPreviewSize.getWidth());
+//            }
+            Log.e(TAG, "   changePreViewSize: " + mPreviewSize.getWidth() +  " * " + mPreviewSize.getHeight()) ;
             // Check if the flash is supported.
             Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
             mFlashSupported = available == null ? false : available;
@@ -306,6 +352,41 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
 
     }
 
+    private Size chooseOptimalSize(Size[] choices, int textureViewWidth,
+                                   int textureViewHeight, int maxWidth,
+                                   int maxHeight, Size aspectRatio) {
+        Log.e(TAG, "   changePreViewSize: " + textureViewWidth +  " * " + textureViewHeight +  "   " + maxWidth +  " * " + maxHeight) ;
+
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<Size> bigEnough = new ArrayList<>();
+        // Collect the supported resolutions that are smaller than the preview Surface
+        List<Size> notBigEnough = new ArrayList<>();
+        int w = aspectRatio.getWidth();
+        int h = aspectRatio.getHeight();
+        for (Size option : choices) {
+            Log.e(TAG, "   chooseOptimalSize: " + option.getWidth() +  " * " + option.getHeight()) ;
+            if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight &&
+                    option.getHeight() == option.getWidth() * h / w) {
+                if (option.getWidth() >= textureViewWidth &&
+                        option.getHeight() >= textureViewHeight) {
+                    bigEnough.add(option);
+                } else {
+                    notBigEnough.add(option);
+                }
+            }
+        }
+
+        // Pick the smallest of those big enough. If there is no one big enough, pick the
+        // largest of those not big enough.
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea());
+        } else if (notBigEnough.size() > 0) {
+            return Collections.max(notBigEnough, new CompareSizesByArea());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
+    }
 
     private void createCameraPreviewSession() {
         try {
@@ -360,7 +441,6 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed
                             if (null == mCameraDevice) {
-                                Log.e("kk", " configure mCameraDevice " + mCameraDevice);
                                 return;
                             }
 
@@ -388,20 +468,18 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
                                         mCaptureCallback, mainHandler);
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
-                                Log.e("kk", " configure failed " + e);
                             }
                         }
 
                         @Override
                         public void onConfigureFailed(
                                 @NonNull CameraCaptureSession cameraCaptureSession) {
-                            CameraUtil.showToast(mActivity,"onConfigureFailed Failed");
+//                            Util.showToast(mActivity,"onConfigureFailed Failed");
                         }
                     }, null
             );
         } catch (CameraAccessException e) {
             e.printStackTrace();
-            Log.e("kk", " CameraAccessException " + e);
         }
     }
 
@@ -426,7 +504,7 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         }
     }
 
-    public void startTakePicture() {
+    public void StartTakePicture() {
         lockFocus();
     }
 
@@ -446,31 +524,28 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
         }
     }
 
-    @Override
-    public void onCameraOpened(CameraAgent.CameraProxy camera) {
-//        mCameraDevice = camera;
-        if (mCameraControl != null) {
-            mCameraControl.onCameraOpened(camera);
-        }
-    }
 
-    @Override
-    public void onCameraDisabled(int cameraId) {
+    private void onCameraDisabled(int cameraId) {
 
     }
 
     @Override
-    public void onDeviceOpenFailure(int cameraId, String info) {
+    public void onOpened(@NonNull CameraDevice camera) {
+        mCameraDevice = camera;
+//        if (mCameraControl != null) {
+//            mCameraControl.onCameraOpened();
+//        }
+        createCameraPreviewSession();
+    }
+
+
+    @Override
+    public void onDisconnected(@NonNull CameraDevice camera) {
 
     }
 
     @Override
-    public void onDeviceOpenedAlready(int cameraId, String info) {
-
-    }
-
-    @Override
-    public void onReconnectionFailure(CameraAgent mgr, String info) {
+    public void onError(@NonNull CameraDevice camera, int error) {
 
     }
 
@@ -493,16 +568,6 @@ public class CameraController_note implements CameraAgent.CameraOpenCallback {
             mImageReader.close();
             mImageReader = null;
         }
-    }
-
-    public AndroidCamera2Settings getCameraSettings() {
-        return /*new AndroidCamera2Settings(mCameraDevice, CameraDevice.TEMPLATE_PREVIEW,
-                mPreviewSize, mPhotoSize)*/null;
-    }
-
-    public void startPreview() {
-        setUpCameraOutputs();
-        createCameraPreviewSession();
     }
 
 
