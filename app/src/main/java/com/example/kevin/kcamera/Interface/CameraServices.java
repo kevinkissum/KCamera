@@ -31,7 +31,6 @@ public interface CameraServices {
      * Deprecated. Use {@link #getCaptureSessionManager()} whenever possible.
      * This direct access to media saver will go away.
      */
-    @Deprecated
     public MediaSaver getMediaSaver();
 
     /**

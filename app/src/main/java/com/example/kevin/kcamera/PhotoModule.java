@@ -28,7 +28,6 @@ import com.example.kevin.kcamera.Ex.CameraAgent;
 import com.example.kevin.kcamera.Ex.CameraCapabilities;
 import com.example.kevin.kcamera.Ex.CameraSettings;
 import com.example.kevin.kcamera.Interface.AppController;
-import com.example.kevin.kcamera.Interface.IPhotoModuleControll;
 import com.example.kevin.kcamera.Interface.PhotoController;
 
 import java.lang.ref.WeakReference;
@@ -51,7 +50,6 @@ public class PhotoModule extends CameraModule implements PhotoController, FocusO
     private CameraActivity mActivity;
     private Context mContext;
     private PhotoUI mUI;
-    private IPhotoModuleControll mPhotoControl;
     private boolean mPaused;
     private int mCameraId;
     private CameraSettings mCameraSettings;
@@ -303,6 +301,7 @@ public class PhotoModule extends CameraModule implements PhotoController, FocusO
 
     @Override
     public void onShutterButtonClick() {
+        Log.d(TAG, "  onShutterButtonClick ");
         if (mPaused || (mCameraState == SWITCHING_CAMERA)
                 || (mCameraState == PREVIEW_STOPPED)
                 || !mAppController.isShutterEnabled()) {
@@ -372,16 +371,11 @@ public class PhotoModule extends CameraModule implements PhotoController, FocusO
 //        mCameraControl.closeCamera();
     }
 
-
-    public void setPresenter(IPhotoModuleControll presenter) {
-        mPhotoControl = presenter;
-    }
-
-
     @Override
     public void resume() {
         mPaused = false;
         requestCameraOpen();
+        mNamedImages = new NamedImages();
 
     }
 
@@ -529,8 +523,7 @@ public class PhotoModule extends CameraModule implements PhotoController, FocusO
                 /*new ShutterCallback(!animateBefore)*/null,
                 null, null,
                 new JpegPictureCallback(null));
-
-//        mNamedImages.nameNewImage(mCaptureStartTime);
+        mNamedImages.nameNewImage(mCaptureStartTime);
 
 //        mFaceDetectionStarted = false;
         return true;    }
@@ -633,7 +626,7 @@ public class PhotoModule extends CameraModule implements PhotoController, FocusO
 //                }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, dataBundle);
 
             } else {
-                saveFinalPhoto(originalJpegData, null, exif, camera);
+                saveFinalPhoto(originalJpegData, name, exif, camera);
             }
         }
     }

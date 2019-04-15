@@ -3,6 +3,7 @@ package com.example.kevin.kcamera.View;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -53,6 +54,7 @@ public class ShutterButton extends ImageView {
 
     @Override
     public boolean performClick() {
+        Log.d("kk", " Shutter performClick ");
         boolean result = super.performClick();
         if (getVisibility() == View.VISIBLE) {
             for (OnShutterButtonListener listener : mListeners) {

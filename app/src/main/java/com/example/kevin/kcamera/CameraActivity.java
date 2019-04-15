@@ -27,6 +27,7 @@ import com.example.kevin.kcamera.Interface.OrientationManager;
 import com.example.kevin.kcamera.View.MainActivityLayout;
 import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.View.ModeListView;
+import com.example.kevin.kcamera.View.ShutterButton;
 
 import java.lang.ref.WeakReference;
 
@@ -95,11 +96,12 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
     private void init() {
         mRootView = (MainActivityLayout) findViewById(R.id.activity_root_view);
         mAppContext = getApplicationContext();
-        mCameraAppUI = new CameraAppUI(this, mRootView);
+        mCameraAppUI = new CameraAppUI(this,this, mRootView);
         mModuleManager = new ModuleManagerImpl();
         ModulesInfo.setupModules(mAppContext, mModuleManager);
         setModuleFromModeIndex(getModeIndex());
         mCurrentModule.init(this);
+        mCameraAppUI.prepareModuleUI();
         mModeListView = (ModeListView) findViewById(R.id.mode_list_layout);
         mModeListView.init(mModuleManager.getSupportedModeIndexList());
 
@@ -183,7 +185,7 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
 
     @Override
     public CameraServices getServices() {
-        return null;
+        return CameraServicesImpl.instance();
     }
 
     public MainActivityLayout getModuleLayoutRoot() {
@@ -352,6 +354,11 @@ public class CameraActivity extends AppCompatActivity implements AppController, 
         openModule(mCurrentModule);
         mCameraAppUI.addShutterListener(mCurrentModule);
 
+    }
+
+    @Override
+    public ShutterButton.OnShutterButtonListener getCurrentModuleController() {
+        return mCurrentModule;
     }
 
     private void openModule(CameraModule module) {

@@ -8,7 +8,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.example.kevin.kcamera.Interface.IPhotoUIStatusListener;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -22,7 +21,6 @@ public class PhotoUI implements TextureView.SurfaceTextureListener, ShutterButto
     private static final String TAG = "PhotoUI";
     private MainActivityLayout mRootView;
     private AutoFitTextureView mTextureView;
-    private IPhotoUIStatusListener mPresenter;
     private ShutterButton mShutter;
     private CaptureLayoutHelper mCaptureLayoutHelper;
     private BottomBar mBottomBar;

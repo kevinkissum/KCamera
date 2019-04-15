@@ -3,6 +3,7 @@ package com.example.kevin.kcamera.Interface;
 import android.content.Context;
 
 import com.example.kevin.kcamera.ButtonManager;
+import com.example.kevin.kcamera.View.ShutterButton;
 
 public interface AppController {
     public ButtonManager getButtonManager();
@@ -30,4 +31,5 @@ public interface AppController {
 
     public void onModeSelected(int moduleIndex);
 
+    ShutterButton.OnShutterButtonListener getCurrentModuleController();
 }

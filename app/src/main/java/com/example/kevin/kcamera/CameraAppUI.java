@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 
+import com.example.kevin.kcamera.Interface.AppController;
 import com.example.kevin.kcamera.View.AutoFitTextureView;
 import com.example.kevin.kcamera.View.BottomBar;
 import com.example.kevin.kcamera.View.MainActivityLayout;
@@ -30,6 +31,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener,
     private final static int SWIPE_LEFT = 3;
     private final static int SWIPE_RIGHT = 4;
     private final static int SWIPE_TIME_OUT_MS = 500;
+    private final AppController mController;
 
 
     private Context mContext;
@@ -55,7 +57,7 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener,
                 @Override
                 public void onStateChanged(int state) {
 
-                    ButtonManager buttonManager = mActivity.getButtonManager();
+                    ButtonManager buttonManager = mController.getButtonManager();
 //                    buttonManager.disableCameraButtonAndBlock();
                     Log.d(TAG, "Start to switch camera. cameraId=" + state);
                 }
@@ -65,15 +67,16 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener,
         return new ButtonManager.ButtonCallback() {
             @Override
             public void onStateChanged(int state) {
-                mActivity.getButtonManager().disableButton(conflictingButton);
+                mController.getButtonManager().disableButton(conflictingButton);
             }
         };
     }
 
-    public CameraAppUI(CameraActivity activity, MainActivityLayout rootView) {
+    public CameraAppUI(AppController controller, CameraActivity activity, MainActivityLayout rootView) {
         mRootView = rootView;
         mActivity = activity;
         mContext = activity.getApplicationContext();
+        mController = controller;
         init();
     }
 
@@ -209,6 +212,10 @@ public class CameraAppUI implements TextureView.SurfaceTextureListener,
 
     public void addShutterListener(ShutterButton.OnShutterButtonListener listener) {
         mShutter.addOnShutterButtonListener(listener);
+    }
+
+    public void prepareModuleUI() {
+        addShutterListener(mController.getCurrentModuleController());
     }
 
     public interface NonDecorWindowSizeChangedListener {

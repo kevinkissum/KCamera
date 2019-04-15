@@ -80,6 +80,8 @@ public class MediaSaverImpl implements MediaSaver {
             Log.e(TAG, "Cannot add image when the queue is full");
             return;
         }
+        Log.e("kk", "addImage " + title + " mimeType " + mimeType);
+
         ImageSaveTask t = new ImageSaveTask(data, title, date,
                 (loc == null) ? null : new Location(loc),
                 width, height, orientation, mimeType, exif, mContentResolver, l);
