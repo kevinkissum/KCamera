@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <integer name="bottom_bar_background_alpha_overlay">153</integer>
+    <integer name="bottom_bar_background_alpha">255</integer>
+
+
+</resources>

@@ -25,5 +25,7 @@
     <dimen name="mode_selector_item_height">60dp</dimen>
     <dimen name="mode_selector_text_size">16sp</dimen>
 
+    <dimen name="video_capture_circle_diameter">64dp</dimen>
+
 
 </resources>
