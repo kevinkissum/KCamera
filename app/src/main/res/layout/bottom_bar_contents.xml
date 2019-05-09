@@ -8,6 +8,7 @@
         android:id="@+id/bottom_panel_parent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#60f100"
         android:paddingTop="16dp"
         android:orientation="horizontal" >
 
@@ -19,8 +20,8 @@
 
             <com.example.kevin.kcamera.View.RoundedThumbnailView
                 android:id="@+id/rounded_thumbnail_view"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:clickable="true"
                 android:focusable="true"
@@ -54,13 +55,12 @@
 
             <com.example.kevin.kcamera.View.MultiToggleImageButton
                 android:id="@+id/camera_switch"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="@null"
-                camera:imageIds="@array/camera_id_icons" />
+                android:src="@drawable/ic_switch_camera_back_normal" />
         </FrameLayout>
 
     </LinearLayout>

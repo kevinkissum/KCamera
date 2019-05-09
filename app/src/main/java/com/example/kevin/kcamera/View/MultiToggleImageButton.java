@@ -146,7 +146,10 @@ public class MultiToggleImageButton extends ImageButton {
                 }
             }
         });
-        setScaleType(ImageView.ScaleType.MATRIX);
+        /**
+         * 该模式需要与ImageView.setImageMatrix(Matrix matrix) 配合使用，因为该模式需要用于指定一个变换矩阵用于指定图片如何展示
+         */
+//        setScaleType(ImageView.ScaleType.MATRIX);
 
     }
 
